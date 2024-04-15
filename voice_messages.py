@@ -1,4 +1,3 @@
-import telebot
 import speech_recognition as sr
 import os
 import requests
@@ -13,7 +12,7 @@ def convert_voice_to_text(message, path):
             text = r.recognize_google(audio, language="ru-RU")
         return text
     except:
-        return 0#прописать ошибку для пользователя
+        return 0 # прописать ошибку для пользователя
 
 
 def get_text_voice(message):
