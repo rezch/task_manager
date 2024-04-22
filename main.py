@@ -1,10 +1,33 @@
 from ChatGPT_Request import RequestEvent, ParseRequest
 
+
 class Bot:
-    def someCommand(message):
-        return "Hello"
+    def startCommand(messege):
+        ''' start command '''
+        return "Start"
+
+    def helloCommand(message):
+        ''' hello command '''
+        result = 'Hello '
+        if message.from_user.first_name is None and message.from_user.last_name is None:
+            return result + message.from_user.username
+        if message.from_user.first_name is not None:
+            result += message.from_user.first_name
+        if message.from_user.last_name is not None:
+            result += message.from_user.last_name
+        return result
 
 
+    ''' list of bot commands 
+        ( command function, list of command start key word )
+    '''
+    commands = [
+        (startCommand, ['start']),
+        (helloCommand, ['hello'])
+    ]
+
+
+# testing func --------------
 
 def testGptResponse() -> None:
     text = "Добавить напоминание о занятии 24 апреля в 12 часов дня"

@@ -4,7 +4,6 @@ from os import environ
 from main import Bot
 
 
-bot = Bot()
 token = environ.get("TOKEN")
 client = telebot.TeleBot(token=token, 
                     parse_mode=None,
@@ -13,17 +12,39 @@ client = telebot.TeleBot(token=token,
                     )
 
 
+def command_wrapper(commands):
+    ''' wrapper for bot commands '''
+    def wrapper(func):
+        @client.message_handler(commands=commands)
+        def _wrapper(*args, **kwargs):
+            responce = func(args[0])
 
-@client.message_handler(commands='<command_name>')
-def some_command(message):
-    responce = bot.someCommand(message)
+            echo = client.send_message(
+                chat_id=args[0].chat.id,
+                text=responce
+            )
 
-    client.send_message(
-        chat_id=message.chat.id,
-        text=responce
-    )
+            # if command had echo function
+            if len(responce) == 2:
+                client.register_next_step_handler(message=echo, callback=responce[1])
+
+        return _wrapper
+    return wrapper
+
+
+def wrap_commands():
+    ''' wraps all bot commands to telebot handlers '''
+    for command in Bot.commands:
+        command_wrapper(command[1])(command[0])
+
+
+def start_polling():
+    ''' bot start infinity polling '''
+    print("start polling")
+    client.infinity_polling()
 
 
 if __name__ == "__main__":
-    bot.infinity_polling()
-    
+    wrap_commands()
+    start_polling()
+
