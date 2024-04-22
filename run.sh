@@ -6,5 +6,5 @@ echo "Starting bot in '$BASEDIR'"
 
 source $BASEDIR/tmbotenv/bin/activate
 
-python $BASEDIR/client.py
+python -m $BASEDIR/client
 
