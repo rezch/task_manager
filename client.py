@@ -23,13 +23,33 @@ def command_wrapper(commands):
                 chat_id=args[0].chat.id,
                 text=responce
             )
-
+            
             # if command had echo function
             if len(responce) == 2:
-                client.register_next_step_handler(message=echo, callback=responce[1])
+                client.register_next_step_handler(message=echo, callback=echo_command_wrapper(responce[1]))
 
         return _wrapper
     return wrapper
+
+
+def echo_command_wrapper(func):
+    ''' wrapper for echo commands '''
+    def _wrapper(*args, **kwargs):
+        responce = func(args[0])
+
+        echo = client.send_message(
+            chat_id=args[0].chat.id,
+            text=responce
+        )
+        
+        # if command had echo function
+        if len(responce) == 2:
+            client.register_next_step_handler(
+                message=echo[0], 
+                callback=wrap_commands(responce[1])
+                )
+
+    return _wrapper
 
 
 def wrap_commands():
