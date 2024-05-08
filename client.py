@@ -74,20 +74,11 @@ def base_wrapper(func):
     return _wrapper
 
 
-def command_wrapper(commands):
-    """ wrapper for bot commands """
-
-    def wrapper(func):
-        return client.message_handler(commands=commands)(base_wrapper(func))
-
-    return wrapper
-
-
 def wrap_commands():
     """ wraps all bot commands to telebot handlers """
 
     for command in Bot.commands:
-        command_wrapper(command[1])(command[0])
+        client.message_handler(commands=command[1])(base_wrapper(command[0]))
 
 
 def start_polling():

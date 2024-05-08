@@ -6,7 +6,7 @@ def recognise(filename):
     with sr.AudioFile(filename) as source:
         audio_text = r.listen(source)
         try:
-            text = r.recognize_google(audio_text,language="ru_RU")
+            text = r.recognize_google(audio_text, language="ru_RU")
             print('Converting audio transcripts into text ...')
             print(text)
             return text
