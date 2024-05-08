@@ -1,8 +1,8 @@
 import telebot
 from os import environ, system, remove, path, makedirs, cpu_count
 from uuid import uuid4
-from voice_parser import recognise
 
+from voice_parser import recognise
 from main import Bot
 
 token = environ.get("TOKEN")
