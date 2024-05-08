@@ -29,8 +29,11 @@ pip3 install SpeechRecognition
 echo "apt update in system"
 sudo apt-get -y update
 
-echo "ffmpeg install in system"
-sudo apt-get -y remove --purge ffmpeg
-sudo apt-add-repository -y ppa:mc3man/trusty-media
-sudo apt-add-repository -y ppa:jonathonf/ffmpeg-3
-sudo apt-get -y install ffmpeg
+# install ffmpeg if it needed
+if ! type -P ffmpeg; then
+  echo "ffmpeg install in system"
+  sudo apt-get -y remove --purge ffmpeg
+  sudo apt-add-repository -y ppa:mc3man/trusty-media
+  sudo apt-add-repository -y ppa:jonathonf/ffmpeg-3
+  sudo apt-get -y install ffmpeg
+fi
