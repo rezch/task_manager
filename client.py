@@ -1,5 +1,5 @@
 import telebot
-from os import environ, system, remove, path, makedirs
+from os import environ, system, remove, path, makedirs, cpu_count
 from uuid import uuid4
 from voice_parser import recognise
 
@@ -9,7 +9,7 @@ token = environ.get("TOKEN")
 client = telebot.TeleBot(token=token,
                          parse_mode=None,
                          threaded=True,
-                         num_threads=4
+                         num_threads=cpu_count()
                          )
 
 

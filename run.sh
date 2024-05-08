@@ -2,9 +2,7 @@
 
 BASEDIR=$(dirname "$0")
 
-echo "Starting bot in '$BASEDIR'"
-
 source $BASEDIR/tmbotenv/bin/activate
-
+echo "Starting bot in '$BASEDIR'"
 python3 $BASEDIR/client.py
 
