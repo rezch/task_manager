@@ -19,12 +19,12 @@ python3 -m venv $BASEDIR/tmbotenv
 source $BASEDIR/tmbotenv/bin/activate
 
 echo "updating pip3"
-sudo -H pip3 install --yes --upgrade pip
+sudo -H pip3 install --upgrade pip
 
 echo "pip3 install libs in env"
-pip3 install --yes telebot
-pip3 install --yes g4f
-pip3 install --yes SpeechRecognition
+pip3 install telebot
+pip3 install g4f
+pip3 install SpeechRecognition
 
 echo "apt update in system"
 sudo apt-get -y update
