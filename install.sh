@@ -2,11 +2,23 @@
 
 BASEDIR=$(dirname "$0")
 
-echo "Starting installing env in '$BASEDIR'"
+# install python3 if it needed
+if ! type -P python3; then
+    echo "installing python3"
+    sudo apt install python3
+fi
+
+# install python3-venv if it needed
+if ! type -P python3-venv; then
+    echo "installing python3-venv"
+    sudo apt install python3-venv
+fi
+
+echo "starting installing env in '$BASEDIR'"
 python3 -m venv $BASEDIR/tmbotenv
 source $BASEDIR/tmbotenv/bin/activate
 
-echo "Updating pip3 in env"
+echo "updating pip3"
 sudo -H pip3 install --upgrade pip
 
 echo "pip3 install libs in env"
