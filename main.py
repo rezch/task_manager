@@ -2,19 +2,28 @@ from ChatGPT_Request import RequestEvent, ParseRequest
 
 
 class Bot:
-    ''' bot commands
+    """ bot commands
         args: message
         return: answer message
                 or
                 (answer message, echo command)
-    '''
+    """
 
-    def startCommand(messege):
-        ''' start command '''
+    __instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls.__instance is None:
+            cls.__instance = super().__new__(cls)
+        return cls
+
+    @staticmethod
+    def startCommand(message):
+        """ start command """
         return "Start"
 
+    @staticmethod
     def helloCommand(message):
-        ''' hello command '''
+        """ hello command """
         result = 'Hello '
         if message.from_user.first_name is None and message.from_user.last_name is None:
             return result + message.from_user.username
@@ -22,25 +31,28 @@ class Bot:
             result += message.from_user.first_name
         if message.from_user.last_name is not None:
             result += message.from_user.last_name
-        return (result)
+        return result
 
+    @staticmethod
     def echoCommand(message):
         return "echo"
 
+    @staticmethod
     def testEchoCommand(message):
-        return ("--", Bot.echoCommand)
+        return "--", Bot.echoCommand
 
+    @staticmethod
     def gptEchoCommand(message):
         try:
             response = RequestEvent(message.text)
         except:
-            response =  'Извините, сервис gpt4 временно не доступен'
-        return (response)
+            response = 'Извините, сервис gpt4 временно не доступен'
+        return response
 
+    @staticmethod
     def gptCommand(message):
-        ''' request to gpt '''
-        return ("Какой у вас вопрос?", Bot.gptEchoCommand)
-
+        """ request to gpt """
+        return "Какой у вас вопрос?", Bot.gptEchoCommand
 
     ''' list of bot commands 
         ( command function, list of command start key word )
@@ -55,5 +67,3 @@ class Bot:
 
 if __name__ == "__main__":
     pass
-
-    

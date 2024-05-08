@@ -7,12 +7,12 @@ class DB:
     __datafile = None
     __data = None
 
-    class Error(Exception):
+    class DBException(Exception):
         def __init__(self, message: str):
             self._message = message
 
         def __str__(self):
-            return f"DB Error: {self._message}"
+            return f"DB error: {self._message}"
 
     def __new__(cls, datafile):
         if cls.__instance is None:
@@ -20,26 +20,31 @@ class DB:
             cls.__instance = super().__new__(cls)
         return cls
 
+    @staticmethod
     def LoadedCheck() -> None:
         if DB.__data is None:
-            raise DB.Error("data base not loaded.")
+            raise DB.DBException("data base not loaded.")
 
+    @staticmethod
     def _load(file) -> None:
         DB.__data = json.load(file)
 
-    def Load() -> None:
+    @staticmethod
+    def Load():
         try:
             with open(DB.__datafile, 'r') as f:
                 DB._load(f)
         except:
-            raise DB.Error("load error: source file.")
+            raise DB.DBException("load error: source file.")
         return DB
 
+    @staticmethod
     def _dump(file) -> None:
         file.seek(0)
         json.dump(DB.__data, file)
         file.truncate()
 
+    @staticmethod
     def Dump() -> None:
         DB.LoadedCheck()
 
@@ -47,18 +52,20 @@ class DB:
             with open(DB.__datafile, 'w') as f:
                 DB._dump(f)
         except:
-            raise DB.Error("dump error: source file.")
-        
+            raise DB.DBException("dump error: source file.")
+
+    @staticmethod
     def getUser(user_id) -> dict:
         DB.LoadedCheck()
 
         user_id = str(user_id)
 
         if user_id not in list(DB.__data.keys()):
-            raise DB.Error("User not found.")
+            raise DB.DBException("User not found.")
 
         return DB.__data[user_id]
 
+    @staticmethod
     def addUser(used_id: int) -> None:
         DB.LoadedCheck()
 
