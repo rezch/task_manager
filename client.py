@@ -12,44 +12,65 @@ client = telebot.TeleBot(token=token,
                     )
 
 
+'''
+def base_wrapper(*args, **kwargs):
+    # base inner wrapper for commands
+    responce = func(args[0]) # -> ( responce message, echo_func(opt) )
+
+    # send response to user chat
+    echo = client.send_message(
+        chat_id=args[0].chat.id,
+        text=str(responce[0])
+    )
+    
+    # if command had echo function
+    if len(responce) == 2:
+        client.register_next_step_handler(
+            message=echo[0], 
+            callback=base_wrapper(responce[1])
+            )
+
+
+def command_wrapper(commands):
+    # wrapper for bot commands
+    def wrapper(func):
+        _wrapped = client.message_handler(commands=commands)
+        return _wrapped
+    return wrapper
+'''
+
+def base_wrapper(func):
+    def _wrapper(*args, **kwargs):
+        ''' base inner wrapper for commands '''
+        responce = func(args[0]) # -> ( responce message, echo_func(opt) )
+                
+        if not isinstance(responce, tuple):
+            responce = (responce, None)
+
+        echo = client.send_message(
+            chat_id=args[0].chat.id,
+            text=str(responce[0])
+        )
+        
+        # if command had echo function
+        if responce[1] is not None:
+            client.register_next_step_handler(
+                message=echo,
+                    callback=echo_command_wrapper(responce[1])
+                    )
+    return _wrapper
+
+
 def command_wrapper(commands):
     ''' wrapper for bot commands '''
     def wrapper(func):
-        @client.message_handler(commands=commands)
-        def _wrapper(*args, **kwargs):
-            responce = func(args[0])
-
-            echo = client.send_message(
-                chat_id=args[0].chat.id,
-                text=responce
-            )
-            
-            # if command had echo function
-            if len(responce) == 2:
-                client.register_next_step_handler(message=echo, callback=echo_command_wrapper(responce[1]))
-
-        return _wrapper
+        return client.message_handler(commands=commands)(base_wrapper(func))
     return wrapper
 
 
 def echo_command_wrapper(func):
     ''' wrapper for echo commands '''
-    def _wrapper(*args, **kwargs):
-        responce = func(args[0])
-
-        echo = client.send_message(
-            chat_id=args[0].chat.id,
-            text=responce
-        )
-        
-        # if command had echo function
-        if len(responce) == 2:
-            client.register_next_step_handler(
-                message=echo[0], 
-                callback=wrap_commands(responce[1])
-                )
-
-    return _wrapper
+    return base_wrapper(func)
 
 
 def wrap_commands():

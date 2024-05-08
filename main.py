@@ -22,13 +22,24 @@ class Bot:
             result += message.from_user.first_name
         if message.from_user.last_name is not None:
             result += message.from_user.last_name
-        return result
+        return (result)
 
     def echoCommand(message):
         return "echo"
 
     def testEchoCommand(message):
         return ("--", Bot.echoCommand)
+
+    def gptEchoCommand(message):
+        try:
+            response = RequestEvent(message.text)
+        except:
+            response =  'Извините, сервис gpt4 временно не доступен'
+        return (response)
+
+    def gptCommand(message):
+        ''' request to gpt '''
+        return ("Какой у вас вопрос?", Bot.gptEchoCommand)
 
 
     ''' list of bot commands 
