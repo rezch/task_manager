@@ -35,7 +35,7 @@ class Bot:
 
     @staticmethod
     def echoCommand(message):
-        return "echo"
+        return message.text
 
     @staticmethod
     def testEchoCommand(message):
@@ -59,9 +59,9 @@ class Bot:
         * only for single commands or root commands that starts echo *
     '''
     commands = [
-        (startCommand, ['start']),
-        (helloCommand, ['hello']),
-        (testEchoCommand, ['echo']),
+        (startCommand.__func__, ['start']),
+        (helloCommand.__func__, ['hello']),
+        (testEchoCommand.__func__, ['echo']),
     ]
 
 

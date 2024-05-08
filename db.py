@@ -57,7 +57,6 @@ class DB:
     @staticmethod
     def getUser(user_id) -> dict:
         DB.LoadedCheck()
-
         user_id = str(user_id)
 
         if user_id not in list(DB.__data.keys()):
@@ -66,11 +65,22 @@ class DB:
         return DB.__data[user_id]
 
     @staticmethod
-    def addUser(used_id: int) -> None:
+    def addUser(user_id: int) -> None:
         DB.LoadedCheck()
+        user_id = str(user_id)
 
-        if used_id not in list(DB.__data.keys()):
-            DB.__data[used_id] = {}
+        if user_id not in list(DB.__data.keys()):
+            DB.__data[user_id] = {}
+
+    @staticmethod
+    def updateUser(user_id: int, new_data: dict) -> None:
+        DB.LoadedCheck()
+        user_id = str(user_id)
+
+        if not isinstance(new_data, dict):
+            raise DB.DBException("new user data type is not dict")
+
+        DB.__data[user_id] = new_data
 
 
 if __name__ == "__main__":
