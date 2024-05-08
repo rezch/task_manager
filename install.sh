@@ -15,8 +15,8 @@ if ! type -P python3-venv; then
 fi
 
 echo "starting installing env in '$BASEDIR'"
-python3 -m venv $BASEDIR/tmbotenv
-source $BASEDIR/tmbotenv/bin/activate
+python3 -m venv "$BASEDIR"/tmbotenv
+source "$BASEDIR"/tmbotenv/bin/activate
 
 echo "pip3 install libs in env"
 if ! pip3 list | grep telebot; then
