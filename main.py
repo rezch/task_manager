@@ -30,6 +30,8 @@ class Bot:
         if message.from_user.first_name is not None:
             result += message.from_user.first_name
         if message.from_user.last_name is not None:
+            if len(result) > 6:
+                result += ' '
             result += message.from_user.last_name
         return result
 
