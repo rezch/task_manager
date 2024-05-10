@@ -22,10 +22,10 @@ echo "pip3 install libs in env"
 if ! pip3 list | grep telebot; then
   pip3 install telebot
 fi
-if ! pip3 list | grep telebot; then
+if ! pip3 list | grep g4f; then
   pip3 install g4f
 fi
-if ! pip3 list | grep telebot; then
+if ! pip3 list | grep SpeechRecognition; then
   pip3 install SpeechRecognition
 fi
 
