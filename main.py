@@ -64,6 +64,7 @@ class Bot:
         (startCommand.__func__, ['start']),
         (helloCommand.__func__, ['hello']),
         (testEchoCommand.__func__, ['echo']),
+        (gptCommand.__func__, ['gpt']),
     ]
 
 

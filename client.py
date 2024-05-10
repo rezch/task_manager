@@ -13,10 +13,7 @@ client = telebot.TeleBot(token=token,
                          )
 
 
-@client.message_handler(content_types=['voice'])
-def voiceMessageCommand(message):
-    """ getting voice message from user """
-
+def getTextFromVoice(message):
     # getting data from voice message file
     voice_file_path = "./voice/"
     ready_voice_file_path = "./ready/"
@@ -43,17 +40,27 @@ def voiceMessageCommand(message):
 
     # parsing text from voice message
     text = recognise(file_name_full_converted)
-    client.reply_to(message, text)
 
     # deleting temp audio file
     remove(file_name_full)
     remove(file_name_full_converted)
 
+    return text
+
+
+@client.message_handler(content_types=['voice'])
+def voiceMessageCommand(message, get=False):
+    """ getting voice message from user """
+    client.reply_to(message, getTextFromVoice(message))
+    
 
 def base_wrapper(func):
     """ base inner wrapper for commands """
 
     def _wrapper(*args, **kwargs):
+        if args[0].voice is not None: # if message type is voice
+            args[0].text = getTextFromVoice(args[0])
+
         response = func(args[0])  # -> ( response message, echo_func(opt) )
 
         if not isinstance(response, tuple):
