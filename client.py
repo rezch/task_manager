@@ -56,26 +56,22 @@ def voiceMessageCommand(message, get=False):
 
 def base_wrapper(func):
     """ base inner wrapper for commands """
-
     def _wrapper(*args, **kwargs):
         if args[0].voice is not None: # if message type is voice
             args[0].text = getTextFromVoice(args[0])
 
         response = func(args[0])  # -> ( response message, echo_func(opt) )
-
-        if not isinstance(response, tuple):
-            response = (response, None)
-
+    
         echo = client.send_message(
             chat_id=args[0].chat.id,
-            text=str(response[0])
+            text=str(response)
         )
 
         # if command had 'echo' function
-        if response[1] is not None:
+        if response.echo is not None:
             client.register_next_step_handler(
                 message=echo,
-                callback=base_wrapper(response[1])
+                callback=base_wrapper(response.echo)
             )
 
     return _wrapper
