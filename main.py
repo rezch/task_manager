@@ -18,7 +18,7 @@ class UserResponse:
         self.__data[user_id][command] = data
 
 
-class Request:
+class Response:
     def __init__(self, message, echo=None):
         self.message = message
         self.echo = echo
@@ -49,7 +49,7 @@ class Bot:
     @staticmethod
     def startCommand(message):
         """ start command """
-        return Request("Start")
+        return Response("Start")
 
     @staticmethod
     def helloCommand(message):
@@ -63,15 +63,15 @@ class Bot:
             if len(result) > 6:
                 result += ' '
             result += message.from_user.last_name
-        return Request(result)
+        return Response(result)
 
     @staticmethod
     def echoCommand(message):
-        return Request(message.text)
+        return Response(message.text)
 
     @staticmethod
     def testEchoCommand(message):
-        return Request("--", Bot.echoCommand)
+        return Response("--", Bot.echoCommand)
 
     @staticmethod
     def gptEchoCommand(message):
@@ -79,12 +79,12 @@ class Bot:
             response = RequestEvent(message.text)
         except:
             response = 'Извините, сервис gpt4 временно не доступен'
-        return Request(response)
+        return Response(response)
 
     @staticmethod
     def gptCommand(message):
         """ request to gpt """
-        return Request("Какой у вас вопрос?", Bot.gptEchoCommand)
+        return Response("Какой у вас вопрос?", Bot.gptEchoCommand)
 
     """
     example of forwarding data between echo functions
@@ -92,19 +92,19 @@ class Bot:
     @staticmethod
     def addNoteCommand(message):
         """ add note start command """
-        return Request("Что вы хотите записать?", Bot.addNoteGetText)
+        return Response("Что вы хотите записать?", Bot.addNoteGetText)
 
     @staticmethod
     def addNoteGetText(message):
         """ getting text to add note """
         print('dump:', message.chat.id, 'addNoteGetText', message.text)
         Bot.forward.Set(message.chat.id, 'addNoteGetText', message.text)
-        return Request(message.text)
+        return Response(message.text)
 
     @staticmethod
     def getNoteText(message):
         res = Bot.forward.Get(message.chat.id, 'addNoteGetText') 
-        return Request(res)
+        return Response(res)
     # ----------------------
 
     ''' list of bot commands 
