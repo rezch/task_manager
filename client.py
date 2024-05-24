@@ -61,10 +61,11 @@ def base_wrapper(func):
             args[0].text = getTextFromVoice(args[0])
 
         response = func(args[0])  # -> ( response message, echo_func(opt) )
-    
+
         echo = client.send_message(
             chat_id=args[0].chat.id,
-            text=str(response)
+            text=str(response),
+            parse_mode="MarkdownV2"
         )
 
         # if command had 'echo' function

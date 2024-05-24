@@ -2,6 +2,9 @@ import json
 
 
 class DB:
+    """
+    [user_id][key] = data
+    """
     __instance = None
 
     __datafile = None
@@ -23,7 +26,8 @@ class DB:
     @staticmethod
     def LoadedCheck() -> None:
         if DB.__data is None:
-            raise DB.DBException("data base not loaded.")
+            # raise DB.DBException("data base not loaded.")
+            DB.Load()
 
     @staticmethod
     def _load(file) -> None:
@@ -55,17 +59,18 @@ class DB:
             raise DB.DBException("dump error: source file.")
 
     @staticmethod
-    def getUser(user_id) -> dict:
+    def getUserData(user_id: str) -> dict:
         DB.LoadedCheck()
         user_id = str(user_id)
 
         if user_id not in list(DB.__data.keys()):
-            raise DB.DBException("User not found.")
+            DB.addUser(user_id)
+            # raise DB.DBException("User not found.")
 
         return DB.__data[user_id]
 
     @staticmethod
-    def addUser(user_id: int) -> None:
+    def addUser(user_id: str) -> None:
         DB.LoadedCheck()
         user_id = str(user_id)
 
@@ -73,7 +78,7 @@ class DB:
             DB.__data[user_id] = {}
 
     @staticmethod
-    def updateUser(user_id: int, new_data: dict) -> None:
+    def updateUserData(user_id: str, new_data: dict) -> None:
         DB.LoadedCheck()
         user_id = str(user_id)
 
@@ -85,5 +90,6 @@ class DB:
 
 if __name__ == "__main__":
     db = DB("data.json").Load()
-    user = db.getUser(123)
+    user = db.getUserData("123")
+    user['name'] = '321'
     db.Dump()

@@ -2,7 +2,8 @@ from g4f.client import Client
 
 REQUEST_MESSAGE = 'Представь что ты помошник в напоминаниях о событиях. Вот текст события: {}. Найди в нем дату, ' \
                   'в формате "дата: %D.%M.%Y", и время, в формате "время: %H:%M", в которое ты должен напомнить об ' \
-                  'этом событии, а также информацию об этом событии, в формате "событие: " '
+                  'этом событии, а также информацию об этом событии. И ответь мне в формате "событие - ", "дата - ", ' \
+                  '"время - " '
 
 
 class ParseException(Exception):
@@ -18,6 +19,8 @@ class ParseException(Exception):
 def RequestEvent(appender: str) -> str:
     """ returns response of parsed text from user by gpt4 """
 
+    print("Request for gpt: ", appender)
+
     initializer = REQUEST_MESSAGE.format(appender)
 
     # sending request to gpt4
@@ -29,6 +32,8 @@ def RequestEvent(appender: str) -> str:
                 "user", "content": initializer
         }]
     )
+
+    print("Gpt response: ", response.choices[0].message.content)
 
     return response.choices[0].message.content
 
@@ -53,14 +58,24 @@ def ParseRequest(response: str) -> dict:
 
     # response preproccessing
     response = response.split('\n')
-    response = [line.lower().split(':') for line in response]
+    response = [line.lower().split('-') for line in response]
 
+    print(response)
     if len(response) != 3:
         raise ParseException()
 
     for line in response:
-        if line[0] not in key_words:
+        key = line[0].strip()
+        if key not in key_words:
             raise ParseException()
-        result[key_words[line[0]]] = line[1].strip()
+        result[key_words[key]] = line[1].strip()
 
     return result
+
+
+if __name__ == "__main__":
+    resp = '''событие - занятие
+дата - 26.5.2022
+время - 18:00'''
+    res = ParseRequest(resp)
+    print(res)
