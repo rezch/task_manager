@@ -57,7 +57,7 @@ class Bot:
     __instance = None
     forward = UserResponse()
     db = DB("data.json")
-    notices = None  # format: (datetime, user_id, data)
+    notices = None  # format: (datetime, user_id, data, notice)
     mtx = Mtx()
 
     def __new__(cls, *args, **kwargs):
@@ -84,14 +84,14 @@ class Bot:
         data = Bot.db.getAllData()
         if 'notices' not in data[user_id].keys():
             return
-        print('removing:', notice_data)
         data[user_id]['notices'].remove(notice_data)
 
     @staticmethod
     def noticesPolling() -> list:
         Bot.mtx.lock()
-        if Bot.notices is None:
-            Bot.notices = Bot.LoadNotices()
+        Bot.db.Dump()
+        Bot.db.Load()
+        Bot.notices = Bot.LoadNotices()
 
         ready_notices = []
         for notice in Bot.notices:
