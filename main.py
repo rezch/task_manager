@@ -208,8 +208,10 @@ class Bot:
         try:
             note_id = int(note_id)
             if note_id > len(user_data['notes']) or note_id < 1:
+                Bot.mtx.unlock()
                 raise TypeError
         except TypeError:
+            Bot.mtx.unlock()
             return Response('Номер заметки указан не верно')
         user_data['notes'].pop(note_id - 1)
         Bot.db.Dump()
