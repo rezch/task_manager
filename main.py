@@ -1,3 +1,6 @@
+from datetime import datetime
+from time import sleep
+
 from ChatGPT_Request import RequestEvent, ParseRequest, ParseException
 from db import DB
 
@@ -32,6 +35,19 @@ class Response:
         return str(self.message)
 
 
+class Mtx():
+    def __init__(self):
+        self.__lock = False
+
+    def lock(self):
+        while self.__lock == True:
+            sleep(0.1)
+        self.__lock = True
+
+    def unlock(self):
+        self.__lock = False
+
+
 class Bot:
     """ bot commands
         args: message
@@ -41,6 +57,8 @@ class Bot:
     __instance = None
     forward = UserResponse()
     db = DB("data.json")
+    notices = None  # format: (datetime, user_id, data)
+    mtx = Mtx()
 
     def __new__(cls, *args, **kwargs):
         if cls.__instance is None:
@@ -48,9 +66,52 @@ class Bot:
         return cls
 
     @staticmethod
+    def LoadNotices() -> list:
+        data = Bot.db.getAllData()
+        result = []
+        for user in data.keys():
+            if 'notices' not in data[user].keys():
+                continue
+            for notice in data[user]['notices']:
+                dt = datetime.strptime(notice['date'] + ' ' + notice['time'], '%d.%m.%Y %H:%M')
+                result.append((dt, user, notice['info'], notice))
+        return result
+
+    @staticmethod
+    def RemoveNoticeFromDB(notice) -> None:
+        user_id = notice[1]
+        notice_data = notice[3]
+        data = Bot.db.getAllData()
+        if 'notices' not in data[user_id].keys():
+            return
+        print('removing:', notice_data)
+        data[user_id]['notices'].remove(notice_data)
+
+    @staticmethod
+    def noticesPolling() -> list:
+        Bot.mtx.lock()
+        if Bot.notices is None:
+            Bot.notices = Bot.LoadNotices()
+
+        ready_notices = []
+        for notice in Bot.notices:
+            now = datetime.now()
+            if notice[0] < now:
+                ready_notices.append((notice[0], notice[1], notice[2]))
+
+        for notice in Bot.notices:
+            if (notice[0], notice[1], notice[2]) in ready_notices:
+                Bot.notices.remove(notice)
+                Bot.RemoveNoticeFromDB(notice)
+        Bot.db.Dump()
+        Bot.mtx.unlock()
+        sleep(1)
+        return ready_notices
+
+    @staticmethod
     def startCommand(message):
         """ start command """
-        return Response('Star.t')
+        return Response('Start')
 
     @staticmethod
     def helloCommand(message):
@@ -87,17 +148,20 @@ class Bot:
     @staticmethod
     def addNoteEcho(message):
         """ adding note """
-        user_data = Bot.db.getUserData(message.from_user.id)
+        Bot.mtx.lock()
+        user_data = Bot.db.getUserData(message.chat.id)
         if 'notes' not in user_data.keys():
             user_data['notes'] = []
         user_data['notes'].append(message.text)
         Bot.db.Dump()
+        Bot.mtx.unlock()
         return Response("Заметка успешно добавлена")
 
     @staticmethod
     def __prettyNotes(message) -> str:
         """ convert user notes list to formatted string for response """
-        user_data = Bot.db.getUserData(message.from_user.id)
+        Bot.mtx.lock()
+        user_data = Bot.db.getUserData(message.chat.id)
 
         data = []
         if 'notes' in user_data.keys():
@@ -110,7 +174,7 @@ class Bot:
                 notices.append(Bot.__prettyNotice(notice))
 
             data.extend(notices)
-
+        Bot.mtx.unlock()
         if not data:
             return "У вас пока нет никаких заметок"
 
@@ -139,7 +203,8 @@ class Bot:
     def deleteNoteEcho(message):
         """ deletes note """
         note_id = message.text
-        user_data = Bot.db.getUserData(message.from_user.id)
+        Bot.mtx.lock()
+        user_data = Bot.db.getUserData(message.chat.id)
         try:
             note_id = int(note_id)
             if note_id > len(user_data['notes']) or note_id < 1:
@@ -148,6 +213,7 @@ class Bot:
             return Response('Номер заметки указан не верно')
         user_data['notes'].pop(note_id - 1)
         Bot.db.Dump()
+        Bot.mtx.unlock()
         return Response('Заметка успешно удалена')
 
     @staticmethod
@@ -166,7 +232,7 @@ class Bot:
         except ParseException:
             print("BAD GPT RESPONSE")
             return Response("Извините, не могу вас правильно понять")
-        Bot.forward.Set(message.from_user.id, Bot.addReminderEcho.__name__, parsed)
+        Bot.forward.Set(message.chat.id, Bot.addReminderEcho.__name__, parsed)
         notice = Bot.__prettyNotice(parsed)
         return Response(f"Добавить это напоминание?\n{notice}", Bot.addReminderAccept)
 
@@ -175,17 +241,33 @@ class Bot:
         response = str(message.text).lower()
         if response not in ['да', 'yes']:
             return Response('Напоминание не было добавлено')
-        notice = Bot.forward.Get(message.from_user.id, Bot.addReminderEcho.__name__)
-        user_data = Bot.db.getUserData(message.from_user.id)
+        notice = Bot.forward.Get(message.chat.id, Bot.addReminderEcho.__name__)
+        Bot.mtx.lock()
+        user_data = Bot.db.getUserData(message.chat.id)
         if 'notices' not in user_data.keys():
             user_data['notices'] = []
         user_data['notices'].append(notice)
+        dt = datetime.strptime(notice['date'] + ' ' + notice['time'], '%d.%m.%Y %H:%M')
+        Bot.notices.append((dt, message.chat.id, notice['info'], notice))
         Bot.db.Dump()
+        Bot.mtx.unlock()
         return Response('Напоминание успешно добавлено')
 
     @staticmethod
-    def getReminderCommand(message):
-        pass
+    def helpCommand(message):
+        text = '''Привет, я бот помощник, с моей помощью ты сможешь хранить свои заметки, и попросить меня напомнить тебе о чем\-то.
+Основные команды:
+/start \- начать работу
+/gpt \- обратиться к сервису gpt4
+/note или /add \- добавить заметку
+/notice или /reminder \- добавить напоминание
+/get \- получить список своих заметок
+/del или /delete \- удалить заметку или напонимание
+/help \- получить информацию о командах
+
+Боту можно отвечать голосовыми сообщениями, или писать текстом.
+Для работы с уведомлениями, лучше помимо напоминания, уточнять день и время в которые вы хотите получить уведомление.'''
+        return Response(text)
 
 
     ''' list of bot commands 
@@ -200,7 +282,19 @@ class Bot:
         (getNoteCommand.__func__, ['get']),
         (deleteNoteCommand.__func__, ['del', 'delete']),
         (addReminderCommand.__func__, ['reminder', 'notice']),
+        (helpCommand.__func__, ['help'])
     ]
+
+    commands_dict = {
+        'start': startCommand.__func__,
+        'hello': helloCommand.__func__,
+        'gpt': gptCommand.__func__,
+        'note': addNoteCommand.__func__,
+        'get': getNoteCommand.__func__,
+        'delete': deleteNoteCommand.__func__,
+        'notice': addReminderCommand.__func__,
+        'help': helpCommand.__func__,
+    }
 
 
 if __name__ == "__main__":

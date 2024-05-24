@@ -87,6 +87,11 @@ class DB:
 
         DB.__data[user_id] = new_data
 
+    @staticmethod
+    def getAllData() -> dict:
+        DB.LoadedCheck()
+        return DB.__data
+
 
 if __name__ == "__main__":
     db = DB("data.json").Load()
