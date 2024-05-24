@@ -35,7 +35,7 @@ class Response:
         return str(self.message)
 
 
-class Mtx():
+class Mtx:
     def __init__(self):
         self.__lock = False
 
