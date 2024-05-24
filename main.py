@@ -66,6 +66,13 @@ class Bot:
         return cls
 
     @staticmethod
+    def GetData() -> dict:
+        Bot.mtx.lock()
+        data = Bot.db.getAllData()
+        Bot.mtx.unlock()
+        return data
+
+    @staticmethod
     def LoadNotices() -> list:
         data = Bot.db.getAllData()
         result = []

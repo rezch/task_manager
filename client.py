@@ -5,6 +5,8 @@ import threading
 
 from voice_parser import recognise
 from main import Bot
+from ChatGPT_Request import ChangeModel, ChangeTimeout
+
 
 token = environ.get("TOKEN")
 client = telebot.TeleBot(token=token,
@@ -12,6 +14,7 @@ client = telebot.TeleBot(token=token,
                          threaded=True,
                          num_threads=cpu_count()
                          )
+
 
 def getTextFromVoice(message):
     # getting data from voice message file
@@ -67,23 +70,26 @@ markup_inline.add(*buttons)
 
 @client.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
-    print('call:', call.data)
-    if call.data in Bot.commands_dict.keys():
-        response = Bot.commands_dict[call.data](call.message)
-        echo = client.edit_message_text(
-            chat_id=call.message.chat.id,
-            message_id=call.message.message_id,
-            text=str(response),
-            parse_mode="MarkdownV2",
-            reply_markup=markup_inline
-        )
-
-        # if command had 'echo' function
-        if response.echo is not None:
-            client.register_next_step_handler(
-                message=echo,
-                callback=base_wrapper(response.echo)
+    print(f'call `{call.data}`, from user {call.from_user.id}-{call.from_user.username}')
+    try:
+        if call.data in Bot.commands_dict.keys():
+            response = Bot.commands_dict[call.data](call.message)
+            echo = client.edit_message_text(
+                chat_id=call.message.chat.id,
+                message_id=call.message.message_id,
+                text=str(response),
+                parse_mode="MarkdownV2",
+                reply_markup=markup_inline
             )
+
+            # if command had 'echo' function
+            if response.echo is not None:
+                client.register_next_step_handler(
+                    message=echo,
+                    callback=base_wrapper(response.echo)
+                )
+    except telebot.apihelper.ApiTelegramException:
+        pass
 
 
 def base_wrapper(func):
@@ -92,6 +98,7 @@ def base_wrapper(func):
         if args[0].voice is not None: # if message type is voice
             args[0].text = getTextFromVoice(args[0])
 
+        print(f'get command: `{args[0].text}`, from user {args[0].from_user.id}-{args[0].from_user.username}')
         response = func(args[0])  # -> ( response message, echo_func(opt) )
         echo = client.send_message(
             chat_id=args[0].chat.id,
@@ -117,18 +124,44 @@ def wrap_commands():
         client.message_handler(commands=command[1])(base_wrapper(command[0]))
 
 
-def notices_polling(api, bot):
-    print("polling notes...")
+threads = []
+alive = True
+
+
+def notices_polling():
+    global alive
+    while alive:
+        try:
+            ready_notice = Bot.noticesPolling()
+            client.send_message(
+                chat_id=ready_notice[1],
+                text=str(ready_notice[2]),
+                parse_mode="MarkdownV2"
+            )
+        except:
+            pass
+
+
+def commandline_polling():
+    global alive
     while True:
         try:
-            ready_notices = bot.noticesPolling()
-            for notice in ready_notices:
-                chat_id, text = notice[1], notice[2]
-                api.send_message(
-                    chat_id=chat_id,
-                    text=str(text),
-                    parse_mode="MarkdownV2"
-                )
+            opt = input()
+            if opt == 'quit':
+                print('Stopping the bot')
+                client.stop_polling()
+                Bot.db.Dump()
+                alive = False
+                return
+            if opt == 'data':
+                data = Bot.GetData()
+                print(data)
+            if opt[:8] == 'setmodel':
+                if ChangeModel(opt[9:]):
+                    print(f'Now using gpt model: {opt[9:]}')
+            if opt[:10] == 'settimeout':
+                if ChangeTimeout(opt[11:]):
+                    print(f'Now gpt request timeout: {opt[11:]}')
         except:
             pass
 
@@ -141,11 +174,17 @@ def start_polling():
         return
 
     wrap_commands()
-    t = threading.Thread(target=notices_polling, args=(client, Bot,))
-    t.start()
+
+    threads.extend([threading.Thread(target=notices_polling), threading.Thread(target=commandline_polling)])
+
+    for thread in threads:
+        thread.start()
+
     print("Start polling")
-    client.infinity_polling()
-    t.join()
+    client.polling()
+
+    for thread in threads:
+        thread.join()
 
 
 if __name__ == "__main__":
