@@ -120,14 +120,17 @@ def wrap_commands():
 def notices_polling(api, bot):
     print("polling notes...")
     while True:
-        ready_notices = bot.noticesPolling()
-        for notice in ready_notices:
-            chat_id, text = notice[1], notice[2]
-            api.send_message(
-                chat_id=chat_id,
-                text=str(text),
-                parse_mode="MarkdownV2"
-            )
+        try:
+            ready_notices = bot.noticesPolling()
+            for notice in ready_notices:
+                chat_id, text = notice[1], notice[2]
+                api.send_message(
+                    chat_id=chat_id,
+                    text=str(text),
+                    parse_mode="MarkdownV2"
+                )
+        except:
+            pass
 
 
 def start_polling():

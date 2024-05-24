@@ -230,7 +230,8 @@ class Bot:
         try:
             parsed = ParseRequest(gpt_response)
         except ParseException:
-            print("BAD GPT RESPONSE")
+            return Response("Извините, не могу вас правильно понять")
+        except ValueError:
             return Response("Извините, не могу вас правильно понять")
         Bot.forward.Set(message.chat.id, Bot.addReminderEcho.__name__, parsed)
         notice = Bot.__prettyNotice(parsed)
