@@ -142,8 +142,8 @@ def notices_polling():
                 chat_id=ready_notice[0],
                 text=str(ready_notice[1])
             )
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
 
 def commandline_polling():
@@ -178,8 +178,8 @@ def commandline_polling():
             elif opt == 'getvars':
                 data = GetGlobalVars()
                 print("".join([f'> {key}: {value}\n' for key, value in data.items()]))
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
 
 def start_polling():

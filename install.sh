@@ -16,7 +16,7 @@ fi
 
 echo "starting installing env in '$BASEDIR'"
 sudo python3 -m venv "$BASEDIR"/tmbotenv
-sudo source "$BASEDIR"/tmbotenv/bin/activate
+source "$BASEDIR"/tmbotenv/bin/activate
 
 if ! type -P pip3; then
   echo "pip3 install in system"

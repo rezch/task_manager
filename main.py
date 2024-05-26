@@ -5,6 +5,20 @@ from ChatGPT_Request import Request
 from db import DB
 
 
+HELP_MESSAGE = '''Привет, я бот помощник, с моей помощью ты сможешь хранить свои заметки, и попросить меня напомнить тебе о чем\-то.
+Основные команды:
+/start \- начать работу
+/gpt \- обратиться к сервису gpt4
+/note или /add \- добавить заметку
+/notice или /reminder \- добавить напоминание
+/get \- получить список своих заметок
+/del или /delete \- удалить заметку или напоминание
+/help \- получить информацию о командах
+
+Боту можно отвечать голосовыми сообщениями, или писать текстом.
+Для работы с уведомлениями, лучше помимо напоминания, уточнять день и время в которые вы хотите получить уведомление.'''
+
+
 class UserResponse:
     def __init__(self):
         self.__data = {}
@@ -137,8 +151,9 @@ class Bot:
     @staticmethod
     def gptEchoCommand(message):
         try:
-            response = RequestEvent(message.text)
-        except:
+            response = Request(message.text)
+        except Exception as e:
+            print(e)
             response = 'Извините, сервис gpt4 временно не доступен'
         return Response(response)
 
@@ -207,7 +222,7 @@ class Bot:
             if note_id > len(user_data['notes']) or note_id < 1:
                 Bot.mtx.unlock()
                 raise ValueError
-        except ValueError:
+        except (ValueError, TypeError):
             Bot.mtx.unlock()
             return Response('Номер заметки указан не верно')
         user_data['notes'].pop(note_id - 1)
@@ -253,19 +268,8 @@ class Bot:
 
     @staticmethod
     def helpCommand(message):
-        text = '''Привет, я бот помощник, с моей помощью ты сможешь хранить свои заметки, и попросить меня напомнить тебе о чем\-то.
-Основные команды:
-/start \- начать работу
-/gpt \- обратиться к сервису gpt4
-/note или /add \- добавить заметку
-/notice или /reminder \- добавить напоминание
-/get \- получить список своих заметок
-/del или /delete \- удалить заметку или напоминание
-/help \- получить информацию о командах
-
-Боту можно отвечать голосовыми сообщениями, или писать текстом.
-Для работы с уведомлениями, лучше помимо напоминания, уточнять день и время в которые вы хотите получить уведомление.'''
-        return Response(text)
+        global HELP_MESSAGE
+        return Response(HELP_MESSAGE)
 
     ''' list of bot commands 
         ( command function, list of command start key word )
