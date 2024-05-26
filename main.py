@@ -95,7 +95,7 @@ class Bot:
         data[user_id]['notices'].remove(notice_data)
 
     @staticmethod
-    def noticesPolling() -> list:
+    def noticesPolling() -> tuple:
         Bot.mtx.lock()
         if Bot.notices is None:
             Bot.notices = Bot.LoadNotices()
@@ -113,7 +113,7 @@ class Bot:
         Bot.mtx.unlock()
         if ready_notices is None:
             return None
-        return (ready_notices[1], ready_notices[2])
+        return ready_notices[1], ready_notices[2]
 
     @staticmethod
     def startCommand(message):
@@ -206,8 +206,8 @@ class Bot:
             note_id = int(note_id)
             if note_id > len(user_data['notes']) or note_id < 1:
                 Bot.mtx.unlock()
-                raise TypeError
-        except TypeError:
+                raise ValueError
+        except ValueError:
             Bot.mtx.unlock()
             return Response('Номер заметки указан не верно')
         user_data['notes'].pop(note_id - 1)
