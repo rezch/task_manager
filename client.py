@@ -5,7 +5,7 @@ import threading
 
 from voice_parser import recognise
 from main import Bot
-from ChatGPT_Request import ChangeModel, ChangeTimeout, GetGlobalVars
+from ChatGPT_Request import ChangeModel, ChangeTimeout, ChangeAttempts, GetGlobalVars
 
 
 token = environ.get("TOKEN")
@@ -162,15 +162,20 @@ def commandline_polling():
                 if ChangeModel(opt[9:]):
                     print(f'> Now using gpt model: {opt[9:]}')
                 else:
-                    print('> Invalid model name, availible models: "gpt-3.5t", "gpt-4"')
+                    print('> Invalid model name, available models: "gpt-3.5t", "gpt-4"')
             if opt[:10] == 'settimeout':
                 if ChangeTimeout(opt[11:]):
                     print(f'> Now gpt request timeout: {opt[11:]}')
                 else:
-                    print('> Invalid timeout value, availible timeout range: 5 - 300 sec')
+                    print('> Invalid timeout value, available timeout range: 5 - 300 sec')
+            if opt[:11] == 'setattempts':
+                if ChangeAttempts(opt[12:]):
+                    print(f'> Now gpt request attempts count: {opt[12:]}')
+                else:
+                    print(f'Invalid attempts count, available num: 1 - 10')
             if opt == 'getvars':
                 data = GetGlobalVars()
-                print(f"> model: {data['model'].name}\n> timeout: {data['timeout']}")
+                print("".join([f'> {key}: {value}\n' for key, value in data.items()]))
         except:
             pass
 

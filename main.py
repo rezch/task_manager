@@ -1,7 +1,7 @@
 from datetime import datetime
 from time import sleep
 
-from ChatGPT_Request import RequestEvent, ParseRequest, ParseException
+from ChatGPT_Request import Request
 from db import DB
 
 
@@ -235,15 +235,13 @@ class Bot:
 
     @staticmethod
     def addReminderEcho(message):
-        gpt_response = RequestEvent(message.text)
-        try:
-            parsed = ParseRequest(gpt_response)
-        except ParseException:
+        gpt_response = Request(message.text)
+        if gpt_response is None:
             return Response("Извините, не могу вас правильно понять")
-        except ValueError:
-            return Response("Извините, не могу вас правильно понять")
-        Bot.forward.Set(message.chat.id, Bot.addReminderEcho.__name__, parsed)
-        notice = Bot.__prettyNotice(parsed)
+        if 'bad_value' in gpt_response.keys():
+            return Response(gpt_response['bad_value'])
+        Bot.forward.Set(message.chat.id, Bot.addReminderEcho.__name__, gpt_response)
+        notice = Bot.__prettyNotice(gpt_response)
         return Response(f"Добавить это напоминание?\n{notice}", Bot.addReminderAccept)
 
     @staticmethod

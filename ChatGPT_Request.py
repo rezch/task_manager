@@ -1,13 +1,16 @@
 from g4f.client import Client
 from g4f.models import gpt_4, gpt_35_turbo
+from datetime import datetime
 
-REQUEST_MESSAGE = 'Представь что ты помошник в напоминаниях о событиях. Вот текст события: {}. Найди в нем дату, ' \
+REQUEST_MESSAGE = 'Представь что ты помошник в напоминаниях о событиях. Вот текст события: {}.' \
+                  'Учитывая, что сегодня {:%H:%M, %d-%m-%Y}, Найди в нем дату, ' \
                   'в формате "дата: %D.%M.%Y", и время, в формате "время: %H:%M", в которое ты должен напомнить об ' \
                   'этом событии, а также информацию об этом событии. И ответь мне в формате "событие - ", "дата - ", ' \
-                  '"время - " '
+                  '"время - ". Если информации о дате или времени нет, то воспользуйся сегодняшним временем и датой'
 
 MODEL = gpt_35_turbo
 TIMEOUT = 60  # sec
+ATTEMPTS = 3
 
 
 class ParseException(Exception):
@@ -48,11 +51,25 @@ def ChangeTimeout(tv: str) -> bool:
     TIMEOUT = tv
     return True
 
+
+def ChangeAttempts(attempts: str) -> bool:
+    global ATTEMPTS
+    try:
+        attempts = int(attempts)
+    except ValueError:
+        return False
+    if 0 > attempts or attempts > 10:
+        return False
+    ATTEMPTS = attempts
+    return True
+
+
 def GetGlobalVars() -> dict:
-    global MODEL, TIMEOUT
+    global MODEL, TIMEOUT, ATTEMPTS
     return {
             'model': MODEL,
             'timeout': TIMEOUT,
+            'attempts': ATTEMPTS,
             }
 
 
@@ -62,10 +79,11 @@ def RequestEvent(appender: str) -> str:
 
     print(f'Request (timeout: {TIMEOUT}) for {MODEL}: {appender}')
 
-    initializer = REQUEST_MESSAGE.format(appender)
+    initializer = REQUEST_MESSAGE.format(appender, datetime.now())
     print(TIMEOUT)
 
     # sending request to gpt4
+    print(initializer)
     client = Client()
     response = client.chat.completions.create(
         model=MODEL,
@@ -85,6 +103,9 @@ def ParseRequest(response: str) -> dict:
     """ returns dict with parsed gpt response
         if response is invalid, return -1
     """
+
+    if 'None' in response or 'none' in response:
+        return {'bad_value': f"Не заполнена информация о конкретной дате и времени напоминания"}
 
     result = {
         'date': '',
@@ -113,7 +134,27 @@ def ParseRequest(response: str) -> dict:
             raise ParseException()
         result[key_words[key]] = line[1].strip()
 
+    for key, value in result.items():
+        if 'None' in value or 'none' in value:
+            return {'bad_value': f"Не заполнена информация о {list(key_words.keys())[list(key_words.values()).index(key)]}"}
+
+    try:
+        datetime.strptime(result['date'] + ' ' + result['time'], '%d.%m.%Y %H:%M')
+    except ValueError:
+        raise ParseException()
+
     return result
+
+
+def Request(message):
+    for i in range(ATTEMPTS):
+        response = RequestEvent(message)
+        try:
+            result = ParseRequest(response)
+        except ParseException:
+            continue
+        return result
+    return None
 
 
 if __name__ == "__main__":
