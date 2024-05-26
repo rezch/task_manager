@@ -146,7 +146,7 @@ class Bot:
             if len(result) > 6:
                 result += ' '
             result += message.from_user.last_name
-        return Response(result)
+        return Response(result, Bot.helloEcho, reply=message)
 
     @staticmethod
     def gptEchoCommand(message):

@@ -58,7 +58,6 @@ def voiceMessageCommand(message, get=False):
     client.reply_to(message, getTextFromVoice(message))
 
 
-markup_inline = telebot.types.InlineKeyboardMarkup()
 buttons = [
     telebot.types.InlineKeyboardButton(text='note', callback_data='note'),
     telebot.types.InlineKeyboardButton(text='notice', callback_data='notice'),
@@ -66,7 +65,10 @@ buttons = [
     telebot.types.InlineKeyboardButton(text='get', callback_data='get'),
     telebot.types.InlineKeyboardButton(text='help', callback_data='help'),
 ]
-markup_inline.add(*buttons)
+# buttons_yes_no = [
+#     telebot.types.InlineKeyboardButton(text='Да', callback_data='yes'),
+#     telebot.types.InlineKeyboardButton(text='Нет', callback_data='no'),
+# ]
 
 
 @client.callback_query_handler(func=lambda call: True)
@@ -80,7 +82,7 @@ def callback_inline(call):
                 message_id=call.message.message_id,
                 text=str(response),
                 parse_mode="MarkdownV2",
-                reply_markup=markup_inline
+                reply_markup=telebot.types.InlineKeyboardMarkup().add(*buttons)
             )
 
             # if command had 'echo' function
@@ -107,14 +109,13 @@ def base_wrapper(func):
                 message=response.reply,
                 text=str(response),
                 parse_mode="MarkdownV2",
-                reply_markup=markup_inline
             )
         else:
             echo = client.send_message(
                 chat_id=args[0].chat.id,
                 text=str(response),
                 parse_mode="MarkdownV2",
-                reply_markup=markup_inline
+                reply_markup=telebot.types.InlineKeyboardMarkup().add(*buttons)
             )
 
         # if command had 'echo' function
