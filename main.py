@@ -218,15 +218,29 @@ class Bot:
         note_id = message.text
         Bot.mtx.lock()
         user_data = Bot.db.getUserData(message.chat.id)
+
+        if 'notes' not in user_data:
+            user_data['notes'] = []
+        if 'notices' not in user_data:
+            user_data['notices'] = []
+
+        notes_count = len(user_data['notes'])
+        notices_count = len(user_data['notices'])
+
         try:
             note_id = int(note_id)
-            if note_id > len(user_data['notes']) or note_id < 1:
+            if note_id > notes_count + notices_count or note_id < 1:
                 Bot.mtx.unlock()
                 raise ValueError
         except (ValueError, TypeError):
             Bot.mtx.unlock()
             return Response('Номер заметки указан не верно')
-        user_data['notes'].pop(note_id - 1)
+
+        if note_id < notes_count:
+            user_data['notes'].pop(note_id - 1)
+        else:
+            user_data['notices'].pop(note_id - 1)
+            
         Bot.db.Dump()
         Bot.mtx.unlock()
         return Response('Заметка успешно удалена')
