@@ -126,21 +126,16 @@ def ParseRequest(response: str) -> dict:
         '事件': 'info'
     }
 
-    chinese_keys = ['日期', '时间', '事件']
-
     # response preproccessing
     response = response.split('\n')
     response = [line.lower().split('-') for line in response]
 
     print(response)
 
-    used_chinese = False
     for line in response:
         key = line[0].strip()
         if key in key_words:
             result[key_words[key]] = line[1].strip()
-        if key in chinese_keys:
-            used_chinese = True
 
     for key, value in result.items():
         if 'None' in value or 'none' in value:
@@ -151,8 +146,10 @@ def ParseRequest(response: str) -> dict:
     except ValueError:
         raise ParseException()
 
-    if used_chinese:
-        result['info'] = Translator().translate(result['info'], 'Russian')
+    translator = Translator()
+
+    if translator.language("关于今天晚上的电话").result != 'Russian':
+        result['info'] = translator.translate(result['info'], 'Russian').result
 
     return result
 
