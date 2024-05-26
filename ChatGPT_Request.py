@@ -83,10 +83,8 @@ def RequestEvent(appender: str) -> str:
 
     initializer = REQUEST_PROMPT.format(appender, datetime.now())
 
-    print(TIMEOUT)
-
     # sending request to gpt4
-    print(initializer)
+    print(TIMEOUT)
     client = Client()
     response = client.chat.completions.create(
         model=MODEL,

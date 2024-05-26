@@ -29,7 +29,7 @@ class UserResponse:
         except KeyError:
             return None
 
-    def Set(self, user_id: str, command: str, data):
+    def Set(self, user_id, command: str, data):
         if user_id not in self.__data.keys():
             self.__data[user_id] = {}
 
@@ -38,9 +38,10 @@ class UserResponse:
 
 
 class Response:
-    def __init__(self, message, echo=None):
+    def __init__(self, message, echo=None, reply=None):
         self.message = message.replace('.', '\.')
         self.echo = echo
+        self.reply = reply
 
     def __iter__(self):
         yield from [self.message, self.echo]
@@ -111,8 +112,7 @@ class Bot:
     @staticmethod
     def noticesPolling() -> tuple:
         Bot.mtx.lock()
-        if Bot.notices is None:
-            Bot.notices = Bot.LoadNotices()
+        Bot.notices = Bot.LoadNotices()
 
         ready_notices = None
         for notice in Bot.notices:
@@ -190,8 +190,9 @@ class Bot:
         if 'notes' in user_data.keys():
             response += ''.join([f'```{i + 1}: {note}\n```' for i, note in enumerate(user_data['notes'])])
 
+        notes_count = 0 if 'notes' not in user_data.keys() else len(user_data['notes'])
         if 'notices' in user_data.keys():
-            response += ''.join([f'```{i + 1}-напоминание: {Bot.__prettyNotice(notice)}\n```' for i, notice in
+            response += ''.join([f'```{i + notes_count + 1}-напоминание: {Bot.__prettyNotice(notice)}\n```' for i, notice in
                                  enumerate(user_data['notices'])])
 
         if response == '':
@@ -247,7 +248,7 @@ class Bot:
             return Response(gpt_response['bad_value'])
         Bot.forward.Set(message.chat.id, Bot.addReminderEcho.__name__, gpt_response)
         notice = Bot.__prettyNotice(gpt_response)
-        return Response(f"Добавить это напоминание?\n{notice}", Bot.addReminderAccept)
+        return Response(f"Добавить это напоминание?\n{notice}", Bot.addReminderAccept, reply=message)
 
     @staticmethod
     def addReminderAccept(message):

@@ -101,12 +101,21 @@ def base_wrapper(func):
 
         print(f'get command: `{args[0].text}`, from user {args[0].from_user.id}-{args[0].from_user.username}')
         response = func(args[0])  # -> ( response message, echo_func(opt) )
-        echo = client.send_message(
-            chat_id=args[0].chat.id,
-            text=str(response),
-            parse_mode="MarkdownV2",
-            reply_markup=markup_inline
-        )
+
+        if response.reply is not None:
+            echo = client.reply_to(
+                message=response.reply,
+                text=str(response),
+                parse_mode="MarkdownV2",
+                reply_markup=markup_inline
+            )
+        else:
+            echo = client.send_message(
+                chat_id=args[0].chat.id,
+                text=str(response),
+                parse_mode="MarkdownV2",
+                reply_markup=markup_inline
+            )
 
         # if command had 'echo' function
         if response.echo is not None:
@@ -201,10 +210,9 @@ def start_polling():
 
     print("> Start polling")
     client.polling()
-    print("> Joining the threads")
 
+    print("> Joining the threads")
     for thread in threads:
-        print(123)
         thread.join()
     print("> terminated")
 
