@@ -57,7 +57,7 @@ class Bot:
     __instance = None
     forward = UserResponse()
     db = DB("data.json")
-    notices = None  # format: (datetime, user_id, data, notice)
+    notices = []  # format: (datetime, user_id, data, notice)
     mtx = Mtx()
 
     def __new__(cls, *args, **kwargs):
@@ -110,7 +110,6 @@ class Bot:
         
         Bot.db.Dump()
         Bot.mtx.unlock()
-        sleep(1)
         if ready_notices is None:
             return None
         return (ready_notices[1], ready_notices[2])
@@ -168,30 +167,19 @@ class Bot:
     def __prettyNotes(message) -> str:
         """ convert user notes list to formatted string for response """
         Bot.mtx.lock()
-        user_data = Bot.db.getUserData(message.chat.id)
-
-        data = []
-        if 'notes' in user_data.keys():
-            data.extend(user_data['notes'])
-
-        notes_ind = len(data)
-        if 'notices' in user_data.keys() and user_data['notices'] != []:
-            notices = []
-            for notice in user_data['notices']:
-                notices.append(Bot.__prettyNotice(notice))
-
-            data.extend(notices)
+        user_data = Bot.db.getUserData(message.chat.id).copy()
         Bot.mtx.unlock()
-        if not data:
-            return "У вас пока нет никаких заметок"
 
-        result = ''
-        for i, note in enumerate(data):
-            if i < notes_ind:
-                result += f'```{i + 1}: {note}\n```'
-            else:
-                result += f'```{i + 1}-напоминание: {note}\n```'
-        return result
+        response = ''
+        if 'notes' in user_data.keys():
+            response += ''.join([f'```{i + 1}: {note}\n```' for i, note in enumerate(user_data['notes'])])
+
+        if 'notices' in user_data.keys():
+            response += ''.join([f'```{i + 1}-напоминание: {Bot.__prettyNotice(notice)}\n```' for i, notice in enumerate(user_data['notices'])])
+
+        if response == '':
+            return "У вас пока нет никаких заметок"
+        return response
 
     @staticmethod
     def getNoteCommand(message):
@@ -230,8 +218,8 @@ class Bot:
         return Response("О чем, и когда мне вам напомнить?", Bot.addReminderEcho)
 
     @staticmethod
-    def __prettyNotice(notise: dict) -> str:
-        return f"`{notise['info']}` {notise['date']} в {notise['time']}"
+    def __prettyNotice(notice: dict) -> str:
+        return f"`{notice['info']}` {notice['date']} в {notice['time']}"
 
     @staticmethod
     def addReminderEcho(message):

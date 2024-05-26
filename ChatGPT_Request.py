@@ -117,7 +117,10 @@ def ParseRequest(response: str) -> dict:
     key_words = {
         'дата': 'date',
         'время': 'time',
-        'событие': 'info'
+        'событие': 'info',
+        '日期': 'date',
+        '时间': 'time',
+        '事件': 'info'
     }
 
     # response preproccessing
@@ -125,14 +128,11 @@ def ParseRequest(response: str) -> dict:
     response = [line.lower().split('-') for line in response]
 
     print(response)
-    if len(response) != 3:
-        raise ParseException()
 
     for line in response:
         key = line[0].strip()
-        if key not in key_words:
-            raise ParseException()
-        result[key_words[key]] = line[1].strip()
+        if key in key_words:
+            result[key_words[key]] = line[1].strip()
 
     for key, value in result.items():
         if 'None' in value or 'none' in value:
@@ -158,8 +158,4 @@ def Request(message):
 
 
 if __name__ == "__main__":
-    resp = '''событие - занятие
-дата - 26.5.2022
-время - 18:00'''
-    res = ParseRequest(resp)
-    print(res)
+    pass

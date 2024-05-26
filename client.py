@@ -1,7 +1,9 @@
+import sys
+
 import telebot
 from os import environ, system, remove, path, makedirs, cpu_count
 from uuid import uuid4
-import threading
+from multiprocessing import Process
 
 from voice_parser import recognise
 from main import Bot
@@ -124,8 +126,9 @@ def wrap_commands():
         client.message_handler(commands=command[1])(base_wrapper(command[0]))
 
 
-threads = []
+processes = []
 alive = True
+restart = False
 
 
 def notices_polling():
@@ -140,12 +143,13 @@ def notices_polling():
                 chat_id=ready_notice[0],
                 text=str(ready_notice[1])
             )
+            sleep(1)
         except:
             pass
 
 
 def commandline_polling():
-    global alive
+    global alive, restart
     while True:
         try:
             opt = input()
@@ -155,52 +159,69 @@ def commandline_polling():
                 Bot.db.Dump()
                 alive = False
                 return
-            if opt == 'data':
+            elif opt == 'data':
                 data = Bot.GetData()
                 print(f'> {data}')
-            if opt[:8] == 'setmodel':
+            elif opt[:8] == 'setmodel':
                 if ChangeModel(opt[9:]):
                     print(f'> Now using gpt model: {opt[9:]}')
                 else:
                     print('> Invalid model name, available models: "gpt-3.5t", "gpt-4"')
-            if opt[:10] == 'settimeout':
+            elif opt[:10] == 'settimeout':
                 if ChangeTimeout(opt[11:]):
                     print(f'> Now gpt request timeout: {opt[11:]}')
                 else:
                     print('> Invalid timeout value, available timeout range: 5 - 300 sec')
-            if opt[:11] == 'setattempts':
+            elif opt[:11] == 'setattempts':
                 if ChangeAttempts(opt[12:]):
                     print(f'> Now gpt request attempts count: {opt[12:]}')
                 else:
                     print(f'Invalid attempts count, available num: 1 - 10')
-            if opt == 'getvars':
+            elif opt == 'getvars':
                 data = GetGlobalVars()
                 print("".join([f'> {key}: {value}\n' for key, value in data.items()]))
+            elif opt == 'restart':
+                print('> Restarting the bot...')
+                client.stop_polling()
+                sys.exit('bash run.sh')
+                # client.stop_polling()
+                # Bot.db.Dump()
+                # alive = False
+                # restart = True
+                return
         except:
             pass
 
 
 def start_polling():
     """ bot start infinity polling """
+    global alive, processes
 
     if environ.get("TOKEN") is None:
-        print("Error: bot token is not defined")
+        print("> Error: bot token is not defined")
         return
 
     wrap_commands()
+    alive = True
 
-    threads.extend([threading.Thread(target=notices_polling), threading.Thread(target=commandline_polling)])
+    # p = Process(target=notices_polling())
+    # processes.extend([Process(target=notices_polling()), Process(target=commandline_polling())])
+    # threads.extend([threading.Thread(target=notices_polling), threading.Thread(target=commandline_polling)])
 
-    for thread in threads:
-        thread.start()
+    # for process in processes:
+    #     process.start()
 
-    print("Start polling")
+    print("> Start polling")
     client.polling()
+    print("> Joining the threads")
 
-    for thread in threads:
-        thread.join()
+    # for process in processes:
+    #     process.terminate()
 
 
 if __name__ == "__main__":
-    start_polling()
+    restart = True
+    while restart:
+        restart = False
+        start_polling()
 
