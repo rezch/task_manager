@@ -57,7 +57,7 @@ class Bot:
     __instance = None
     forward = UserResponse()
     db = DB("data.json")
-    notices = []  # format: (datetime, user_id, data, notice)
+    notices = None  # format: (datetime, user_id, data, notice)
     mtx = Mtx()
 
     def __new__(cls, *args, **kwargs):
@@ -97,7 +97,8 @@ class Bot:
     @staticmethod
     def noticesPolling() -> list:
         Bot.mtx.lock()
-        Bot.notices = Bot.LoadNotices()
+        if Bot.notices is None:
+            Bot.notices = Bot.LoadNotices()
 
         ready_notices = None
         for notice in Bot.notices:
@@ -107,7 +108,7 @@ class Bot:
                 Bot.notices.remove(notice)
                 Bot.RemoveNoticeFromDB(notice)
                 break
-        
+
         Bot.db.Dump()
         Bot.mtx.unlock()
         if ready_notices is None:
@@ -175,7 +176,8 @@ class Bot:
             response += ''.join([f'```{i + 1}: {note}\n```' for i, note in enumerate(user_data['notes'])])
 
         if 'notices' in user_data.keys():
-            response += ''.join([f'```{i + 1}-напоминание: {Bot.__prettyNotice(notice)}\n```' for i, notice in enumerate(user_data['notices'])])
+            response += ''.join([f'```{i + 1}-напоминание: {Bot.__prettyNotice(notice)}\n```' for i, notice in
+                                 enumerate(user_data['notices'])])
 
         if response == '':
             return "У вас пока нет никаких заметок"
@@ -264,7 +266,6 @@ class Bot:
 Боту можно отвечать голосовыми сообщениями, или писать текстом.
 Для работы с уведомлениями, лучше помимо напоминания, уточнять день и время в которые вы хотите получить уведомление.'''
         return Response(text)
-
 
     ''' list of bot commands 
         ( command function, list of command start key word )

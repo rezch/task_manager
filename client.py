@@ -1,9 +1,8 @@
-import sys
-
 import telebot
 from os import environ, system, remove, path, makedirs, cpu_count
 from uuid import uuid4
-from multiprocessing import Process
+import threading
+from time import sleep
 
 from voice_parser import recognise
 from main import Bot
@@ -126,15 +125,15 @@ def wrap_commands():
         client.message_handler(commands=command[1])(base_wrapper(command[0]))
 
 
-processes = []
+threads = []
 alive = True
-restart = False
 
 
 def notices_polling():
     global alive
     while alive:
         try:
+            sleep(1)
             ready_notice = Bot.noticesPolling()
             if ready_notice is None:
                 continue
@@ -143,13 +142,12 @@ def notices_polling():
                 chat_id=ready_notice[0],
                 text=str(ready_notice[1])
             )
-            sleep(1)
         except:
             pass
 
 
 def commandline_polling():
-    global alive, restart
+    global alive
     while True:
         try:
             opt = input()
@@ -180,22 +178,13 @@ def commandline_polling():
             elif opt == 'getvars':
                 data = GetGlobalVars()
                 print("".join([f'> {key}: {value}\n' for key, value in data.items()]))
-            elif opt == 'restart':
-                print('> Restarting the bot...')
-                client.stop_polling()
-                sys.exit('bash run.sh')
-                # client.stop_polling()
-                # Bot.db.Dump()
-                # alive = False
-                # restart = True
-                return
         except:
             pass
 
 
 def start_polling():
     """ bot start infinity polling """
-    global alive, processes
+    global alive, threads
 
     if environ.get("TOKEN") is None:
         print("> Error: bot token is not defined")
@@ -203,20 +192,21 @@ def start_polling():
 
     wrap_commands()
     alive = True
+    threads = []
 
-    # p = Process(target=notices_polling())
-    # processes.extend([Process(target=notices_polling()), Process(target=commandline_polling())])
-    # threads.extend([threading.Thread(target=notices_polling), threading.Thread(target=commandline_polling)])
+    threads.extend([threading.Thread(target=notices_polling), threading.Thread(target=commandline_polling)])
 
-    # for process in processes:
-    #     process.start()
+    for thread in threads:
+        thread.start()
 
     print("> Start polling")
     client.polling()
     print("> Joining the threads")
 
-    # for process in processes:
-    #     process.terminate()
+    for thread in threads:
+        print(123)
+        thread.join()
+    print("> terminated")
 
 
 if __name__ == "__main__":
