@@ -1,8 +1,10 @@
 from g4f.client import Client
 from g4f.models import gpt_4, gpt_35_turbo
 from datetime import datetime
+from translatepy import Translator
 
-REQUEST_MESSAGE = 'Представь что ты помошник в напоминаниях о событиях. Вот текст события: {}.' \
+
+REQUEST_PROMPT = 'Представь что ты помошник в напоминаниях о событиях. Вот текст события: {}.' \
                   'Учитывая, что сегодня {:%H:%M, %d-%m-%Y}, Найди в нем дату, ' \
                   'в формате "дата: %D.%M.%Y", и время, в формате "время: %H:%M", в которое ты должен напомнить об ' \
                   'этом событии, а также информацию об этом событии. И ответь мне в формате "событие - ", "дата - ", ' \
@@ -79,7 +81,8 @@ def RequestEvent(appender: str) -> str:
 
     print(f'Request (timeout: {TIMEOUT}) for {MODEL}: {appender}')
 
-    initializer = REQUEST_MESSAGE.format(appender, datetime.now())
+    initializer = REQUEST_PROMPT.format(appender, datetime.now())
+
     print(TIMEOUT)
 
     # sending request to gpt4
@@ -123,16 +126,21 @@ def ParseRequest(response: str) -> dict:
         '事件': 'info'
     }
 
+    chinese_keys = ['日期', '时间', '事件']
+
     # response preproccessing
     response = response.split('\n')
     response = [line.lower().split('-') for line in response]
 
     print(response)
 
+    used_chinese = False
     for line in response:
         key = line[0].strip()
         if key in key_words:
             result[key_words[key]] = line[1].strip()
+        if key in chinese_keys:
+            used_chinese = True
 
     for key, value in result.items():
         if 'None' in value or 'none' in value:
@@ -142,6 +150,9 @@ def ParseRequest(response: str) -> dict:
         datetime.strptime(result['date'] + ' ' + result['time'], '%d.%m.%Y %H:%M')
     except ValueError:
         raise ParseException()
+
+    if used_chinese:
+        result['info'] = Translator().translate(result['info'], 'Russian')
 
     return result
 
@@ -158,4 +169,4 @@ def Request(message):
 
 
 if __name__ == "__main__":
-    pass
+    print(Translator().translate("关于今天晚上的电话", 'Chinese'))

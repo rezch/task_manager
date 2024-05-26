@@ -28,6 +28,9 @@ fi
 if ! pip3 list | grep SpeechRecognition; then
   sudo pip3 install SpeechRecognition
 fi
+if ! pip3 list | grep translatepy; then
+  sudo pip3 install translatepy
+fi
 
 # install ffmpeg if it needed
 # if type -P ffmpeg; then
