@@ -74,6 +74,7 @@ class Bot:
 
     @staticmethod
     def LoadNotices() -> list:
+        Bot.db.Dump()
         data = Bot.db.getAllData()
         result = []
         for user in data.keys():
@@ -96,24 +97,23 @@ class Bot:
     @staticmethod
     def noticesPolling() -> list:
         Bot.mtx.lock()
-        Bot.db.Dump()
-        Bot.db.Load()
         Bot.notices = Bot.LoadNotices()
 
-        ready_notices = []
+        ready_notices = None
         for notice in Bot.notices:
             now = datetime.now()
             if notice[0] < now:
-                ready_notices.append((notice[0], notice[1], notice[2]))
-
-        for notice in Bot.notices:
-            if (notice[0], notice[1], notice[2]) in ready_notices:
+                ready_notices = (notice[0], notice[1], notice[2])
                 Bot.notices.remove(notice)
                 Bot.RemoveNoticeFromDB(notice)
+                break
+        
         Bot.db.Dump()
         Bot.mtx.unlock()
         sleep(1)
-        return ready_notices
+        if ready_notices is None:
+            return None
+        return (ready_notices[1], ready_notices[2])
 
     @staticmethod
     def startCommand(message):

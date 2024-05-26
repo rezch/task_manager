@@ -133,10 +133,12 @@ def notices_polling():
     while alive:
         try:
             ready_notice = Bot.noticesPolling()
+            if ready_notice is None:
+                continue
+            print("Send notice:", ready_notice)
             client.send_message(
-                chat_id=ready_notice[1],
-                text=str(ready_notice[2]),
-                parse_mode="MarkdownV2"
+                chat_id=ready_notice[0],
+                text=str(ready_notice[1])
             )
         except:
             pass
