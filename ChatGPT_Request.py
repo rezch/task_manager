@@ -48,6 +48,13 @@ def ChangeTimeout(tv: str) -> bool:
     TIMEOUT = tv
     return True
 
+def GetGlobalVars() -> dict:
+    global MODEL, TIMEOUT
+    return {
+            'model': MODEL,
+            'timeout': TIMEOUT,
+            }
+
 
 def RequestEvent(appender: str) -> str:
     """ returns response of parsed text from user by gpt4 """
