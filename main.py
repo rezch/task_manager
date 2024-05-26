@@ -236,11 +236,11 @@ class Bot:
             Bot.mtx.unlock()
             return Response('Номер заметки указан не верно')
 
-        if note_id < notes_count:
+        if note_id <= notes_count:
             user_data['notes'].pop(note_id - 1)
         else:
-            user_data['notices'].pop(note_id - 1)
-            
+            user_data['notices'].pop(note_id - notes_count - 1)
+
         Bot.db.Dump()
         Bot.mtx.unlock()
         return Response('Заметка успешно удалена')
