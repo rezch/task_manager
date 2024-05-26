@@ -18,6 +18,11 @@ echo "starting installing env in '$BASEDIR'"
 sudo python3 -m venv "$BASEDIR"/tmbotenv
 sudo source "$BASEDIR"/tmbotenv/bin/activate
 
+if ! type -P pip3; then
+  echo "pip3 install in system"
+  sudo apt-get -y install ffmpeg
+fi
+
 echo "pip3 install libs in env"
 if ! pip3 list | grep telebot; then
   sudo pip3 install telebot
@@ -42,3 +47,4 @@ if ! type -P ffmpeg; then
   sudo apt-add-repository -y ppa:jonathonf/ffmpeg-3
   sudo apt-get -y install ffmpeg
 fi
+
