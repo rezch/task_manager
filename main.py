@@ -1,7 +1,7 @@
 from datetime import datetime
 from time import sleep
 
-from ChatGPT_Request import Request
+from ChatGPT_Request import Request, RawGptRequest
 from db import DB
 
 HELP_MESSAGE = '''Привет, я бот помощник, с моей помощью ты сможешь хранить свои заметки, и попросить меня напомнить тебе о чем\-то.
@@ -150,12 +150,7 @@ class Bot:
 
     @staticmethod
     def gptEchoCommand(message):
-        try:
-            response = Request(message.text)
-        except Exception as e:
-            print(e)
-            response = 'Извините, сервис gpt4 временно не доступен'
-        return Response(response, reply=message)
+        return Response(RawGptRequest(message.text), reply=message)
 
     @staticmethod
     def gptCommand(message):

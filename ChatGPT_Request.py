@@ -75,6 +75,35 @@ def GetGlobalVars() -> dict:
             }
 
 
+def RawRequestEvent(appender: str) -> str:
+    global MODEL, TIMEOUT
+
+    print(TIMEOUT)
+    client = Client()
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[{
+            "role":
+                "user", "content": appender
+        }],
+        timeout=TIMEOUT,
+    )
+
+    print("Gpt response: ", response.choices[0].message.content)
+    return response.choices[0].message.content
+
+
+def RawGptRequest(appender: str) -> str:
+    global ATTEMPTS
+    for _ in range(ATTEMPTS):
+        try:
+            response = RawRequestEvent(appender)
+            return response
+        except Exception as e:
+            print(f"Gpt error: {e}",)
+    return 'Извините, сервис gpt4 временно не доступен'
+
+
 def RequestEvent(appender: str) -> str:
     """ returns response of parsed text from user by gpt4 """
     global MODEL, TIMEOUT
@@ -153,7 +182,7 @@ def ParseRequest(response: str) -> dict:
 
 
 def Request(message):
-    for i in range(ATTEMPTS):
+    for _ in range(ATTEMPTS):
         response = RequestEvent(message)
         try:
             result = ParseRequest(response)
