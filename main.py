@@ -289,7 +289,7 @@ class Bot:
     commands = [
         (startCommand.__func__, ['start']),
         (helloCommand.__func__, ['hello']),
-        (gptCommand.__func__, ['gpt']),
+        # (gptCommand.__func__, ['gpt']),
         (addNoteCommand.__func__, ['note', 'add']),
         (getNoteCommand.__func__, ['get']),
         (deleteNoteCommand.__func__, ['del', 'delete']),
@@ -300,7 +300,7 @@ class Bot:
     commands_dict = {
         'start': startCommand.__func__,
         'hello': helloCommand.__func__,
-        'gpt': gptCommand.__func__,
+        # 'gpt': gptCommand.__func__,
         'note': addNoteCommand.__func__,
         'get': getNoteCommand.__func__,
         'delete': deleteNoteCommand.__func__,
