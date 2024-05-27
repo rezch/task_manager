@@ -89,8 +89,11 @@ def RawRequestEvent(appender: str) -> str:
         timeout=TIMEOUT,
     )
 
-    print("Gpt response: ", response.choices[0].message.content)
-    return response.choices[0].message.content
+    result = response.choices[0].message.content
+    result = Translator().translate(result, 'Russian').result
+
+    print("Gpt response: ", result)
+    return result
 
 
 def RawGptRequest(appender: str) -> str:
@@ -98,9 +101,6 @@ def RawGptRequest(appender: str) -> str:
     for _ in range(ATTEMPTS):
         try:
             response = RawRequestEvent(appender)
-            translator = Translator()
-            if translator.language(response).result != 'Russian':
-                response = translator.translate(response, 'Russian').result
             return response
         except Exception as e:
             print(f"Gpt error: {e}",)
@@ -176,10 +176,7 @@ def ParseRequest(response: str) -> dict:
     except ValueError:
         raise ParseException()
 
-    translator = Translator()
-
-    if translator.language(result['info']).result != 'Russian':
-        result['info'] = translator.translate(result['info'], 'Russian').result
+    result['info'] = Translator().translate(result['info'], 'Russian').result
 
     return result
 
