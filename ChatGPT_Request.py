@@ -98,6 +98,9 @@ def RawGptRequest(appender: str) -> str:
     for _ in range(ATTEMPTS):
         try:
             response = RawRequestEvent(appender)
+            translator = Translator()
+            if translator.language(response).result != 'Russian':
+                response = translator.translate(response, 'Russian').result
             return response
         except Exception as e:
             print(f"Gpt error: {e}",)
@@ -175,7 +178,7 @@ def ParseRequest(response: str) -> dict:
 
     translator = Translator()
 
-    if translator.language("关于今天晚上的电话").result != 'Russian':
+    if translator.language(result['info']).result != 'Russian':
         result['info'] = translator.translate(result['info'], 'Russian').result
 
     return result
