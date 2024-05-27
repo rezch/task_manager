@@ -4,7 +4,6 @@ from time import sleep
 from ChatGPT_Request import Request
 from db import DB
 
-
 HELP_MESSAGE = '''Привет, я бот помощник, с моей помощью ты сможешь хранить свои заметки, и попросить меня напомнить тебе о чем\-то.
 Основные команды:
 /start \- начать работу
@@ -38,10 +37,11 @@ class UserResponse:
 
 
 class Response:
-    def __init__(self, message, echo=None, reply=None):
+    def __init__(self, message, echo=None, reply=None, keyboard: bool = True):
         self.message = message.replace('.', '\.')
         self.echo = echo
         self.reply = reply
+        self.keyboard = keyboard
 
     def __iter__(self):
         yield from [self.message, self.echo]
@@ -146,7 +146,7 @@ class Bot:
             if len(result) > 6:
                 result += ' '
             result += message.from_user.last_name
-        return Response(result, Bot.helloEcho, reply=message)
+        return Response(result, reply=message)
 
     @staticmethod
     def gptEchoCommand(message):
@@ -155,17 +155,17 @@ class Bot:
         except Exception as e:
             print(e)
             response = 'Извините, сервис gpt4 временно не доступен'
-        return Response(response)
+        return Response(response, reply=message)
 
     @staticmethod
     def gptCommand(message):
         """ request to gpt """
-        return Response("Какой у вас вопрос?", Bot.gptEchoCommand)
+        return Response("Какой у вас вопрос?", Bot.gptEchoCommand, keyboard=False)
 
     @staticmethod
     def addNoteCommand(message):
         """ add note start command """
-        return Response("Что вы хотите записать?", Bot.addNoteEcho)
+        return Response("Что вы хотите записать?", Bot.addNoteEcho, keyboard=False)
 
     @staticmethod
     def addNoteEcho(message):
@@ -177,7 +177,7 @@ class Bot:
         user_data['notes'].append(message.text)
         Bot.db.Dump()
         Bot.mtx.unlock()
-        return Response("Заметка успешно добавлена")
+        return Response("Заметка успешно добавлена", reply=message)
 
     @staticmethod
     def __prettyNotes(message) -> str:
@@ -192,8 +192,9 @@ class Bot:
 
         notes_count = 0 if 'notes' not in user_data.keys() else len(user_data['notes'])
         if 'notices' in user_data.keys():
-            response += ''.join([f'```{i + notes_count + 1}-напоминание: {Bot.__prettyNotice(notice)}\n```' for i, notice in
-                                 enumerate(user_data['notices'])])
+            response += ''.join(
+                [f'```{i + notes_count + 1}-напоминание: {Bot.__prettyNotice(notice)}\n```' for i, notice in
+                 enumerate(user_data['notices'])])
 
         if response == '':
             return "У вас пока нет никаких заметок"
@@ -210,7 +211,7 @@ class Bot:
         notes = Bot.__prettyNotes(message)
         if notes == "У вас пока нет никаких заметок":
             return Response(notes)
-        return Response(f'{notes}\n Какую заметку вы хотите удалить?', Bot.deleteNoteEcho)
+        return Response(f'{notes}\n Какую заметку вы хотите удалить?', Bot.deleteNoteEcho, keyboard=False)
 
     @staticmethod
     def deleteNoteEcho(message):
@@ -234,7 +235,7 @@ class Bot:
                 raise ValueError
         except (ValueError, TypeError):
             Bot.mtx.unlock()
-            return Response('Номер заметки указан не верно')
+            return Response('Номер заметки указан не верно', reply=message)
 
         if note_id <= notes_count:
             user_data['notes'].pop(note_id - 1)
@@ -243,11 +244,11 @@ class Bot:
 
         Bot.db.Dump()
         Bot.mtx.unlock()
-        return Response('Заметка успешно удалена')
+        return Response('Заметка успешно удалена', reply=message)
 
     @staticmethod
     def addReminderCommand(message):
-        return Response("О чем, и когда мне вам напомнить?", Bot.addReminderEcho)
+        return Response("О чем, и когда мне вам напомнить?", Bot.addReminderEcho, keyboard=False)
 
     @staticmethod
     def __prettyNotice(notice: dict) -> str:
@@ -257,12 +258,12 @@ class Bot:
     def addReminderEcho(message):
         gpt_response = Request(message.text)
         if gpt_response is None:
-            return Response("Извините, не могу вас правильно понять")
+            return Response("Извините, не могу вас правильно понять", reply=message)
         if 'bad_value' in gpt_response.keys():
             return Response(gpt_response['bad_value'])
         Bot.forward.Set(message.chat.id, Bot.addReminderEcho.__name__, gpt_response)
         notice = Bot.__prettyNotice(gpt_response)
-        return Response(f"Добавить это напоминание?\n{notice}", Bot.addReminderAccept, reply=message)
+        return Response(f"Добавить это напоминание?\n{notice}", Bot.addReminderAccept, reply=message, keyboard=False)
 
     @staticmethod
     def addReminderAccept(message):

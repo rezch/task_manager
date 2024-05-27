@@ -77,12 +77,13 @@ def callback_inline(call):
     try:
         if call.data in Bot.commands_dict.keys():
             response = Bot.commands_dict[call.data](call.message)
+            keyboard = telebot.types.InlineKeyboardMarkup().add(*buttons) if response.keyboard is True else None
             echo = client.edit_message_text(
                 chat_id=call.message.chat.id,
                 message_id=call.message.message_id,
                 text=str(response),
                 parse_mode="MarkdownV2",
-                reply_markup=telebot.types.InlineKeyboardMarkup().add(*buttons)
+                reply_markup=keyboard
             )
 
             # if command had 'echo' function
@@ -105,17 +106,20 @@ def base_wrapper(func):
         response = func(args[0])  # -> ( response message, echo_func(opt) )
 
         if response.reply is not None:
+            keyboard = telebot.types.InlineKeyboardMarkup().add(*buttons) if response.keyboard is True else None
             echo = client.reply_to(
                 message=response.reply,
                 text=str(response),
                 parse_mode="MarkdownV2",
+                reply_markup=keyboard
             )
         else:
+            keyboard = telebot.types.InlineKeyboardMarkup().add(*buttons) if response.keyboard is True else None
             echo = client.send_message(
                 chat_id=args[0].chat.id,
                 text=str(response),
                 parse_mode="MarkdownV2",
-                reply_markup=telebot.types.InlineKeyboardMarkup().add(*buttons)
+                reply_markup=keyboard
             )
 
         # if command had 'echo' function
