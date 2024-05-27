@@ -4,15 +4,16 @@ from time import sleep
 from ChatGPT_Request import Request, RawGptRequest
 from db import DB
 
-HELP_MESSAGE = '''Привет, я бот помощник, с моей помощью ты сможешь хранить свои заметки, и попросить меня напомнить тебе о чем\-то.
+HELP_MESSAGE = '''Привет, я бот помощник, с моей помощью ты сможешь хранить свои заметки, и попросить меня напомнить тебе о чем-то.
+
 Основные команды:
-/start \- начать работу
-/gpt \- обратиться к сервису gpt4
-/note или /add \- добавить заметку
-/notice или /reminder \- добавить напоминание
-/get \- получить список своих заметок
-/del или /delete \- удалить заметку или напоминание
-/help \- получить информацию о командах
+/start - начать работу
+/gpt - обратиться к сервису gpt4
+/note или /add - добавить заметку
+/notice или /reminder - добавить напоминание
+/get - получить список своих заметок
+/del или /delete - удалить заметку или напоминание
+/help - получить информацию о командах
 
 Боту можно отвечать голосовыми сообщениями, или писать текстом.
 Для работы с уведомлениями, лучше помимо напоминания, уточнять день и время в которые вы хотите получить уведомление.'''
@@ -38,10 +39,18 @@ class UserResponse:
 
 class Response:
     def __init__(self, message, echo=None, reply=None, keyboard: bool = True):
-        self.message = message.replace('.', '\.')
+        self.message = Response.prepare_message(str(message))
         self.echo = echo
         self.reply = reply
         self.keyboard = keyboard
+
+    @staticmethod
+    def prepare_message(message: str) -> str:
+        # telebot reserved charachters for markdown mode - "()_-."
+        reserved = '()_-.'
+        for char in reserved:
+            message = message.replace(char, '\\' + char)
+        return message
 
     def __iter__(self):
         yield from [self.message, self.echo]
@@ -132,7 +141,9 @@ class Bot:
     @staticmethod
     def startCommand(message):
         """ start command """
-        return Response('Start')
+        global HELP_MESSAGE
+        return Response(HELP_MESSAGE)
+
 
     @staticmethod
     def helloCommand(message):
@@ -280,7 +291,8 @@ class Bot:
     @staticmethod
     def helpCommand(message):
         global HELP_MESSAGE
-        return Response(HELP_MESSAGE)
+        response = ''.join([line + '\n' for line in HELP_MESSAGE.split('\n')[1:]])
+        return Response(response)
 
     ''' list of bot commands 
         ( command function, list of command start key word )
