@@ -90,7 +90,8 @@ def callback_inline(call):
             if response.echo is not None:
                 client.register_next_step_handler(
                     message=echo,
-                    callback=base_wrapper(response.echo)
+                    callback=base_wrapper(response.echo),
+                    parse_mode="MarkdownV2",
                 )
     except telebot.apihelper.ApiTelegramException:
         pass
@@ -153,11 +154,12 @@ def notices_polling():
                 continue
             print("Send notice:", ready_notice)
             client.send_message(
-                chat_id=ready_notice[0],
-                text=str(ready_notice[1])
+                chat_id=ready_notice[1],
+                text=str(ready_notice[2])
             )
         except Exception as e:
-            print(e)
+            print(e, f'Cannot send notice: {ready_notice}')
+            Bot.revertNotice(ready_notice)
 
 
 def commandline_polling():
@@ -214,7 +216,7 @@ def start_polling():
         thread.start()
 
     print("> Start polling")
-    client.polling()
+    client.infinity_polling()
 
     print("> Joining the threads")
     for thread in threads:

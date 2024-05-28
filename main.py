@@ -81,7 +81,7 @@ class Bot:
     __instance = None
     forward = UserResponse()
     db = DB("data.json")
-    notices = None  # format: (datetime, user_id, data, notice)
+    notices = None  # format: (datetime, char.id, data, notice)
     mtx = Mtx()
 
     def __new__(cls, *args, **kwargs):
@@ -119,24 +119,32 @@ class Bot:
         data[user_id]['notices'].remove(notice_data)
 
     @staticmethod
-    def noticesPolling() -> tuple:
+    def noticesPolling():
         Bot.mtx.lock()
         Bot.notices = Bot.LoadNotices()
 
-        ready_notices = None
         for notice in Bot.notices:
             now = datetime.now()
             if notice[0] < now:
-                ready_notices = (notice[0], notice[1], notice[2])
                 Bot.notices.remove(notice)
                 Bot.RemoveNoticeFromDB(notice)
-                break
+                Bot.db.Dump()
+                Bot.mtx.unlock()
+                return notice
 
+        Bot.mtx.unlock()
+        return None
+
+    @staticmethod
+    def revertNotice(notice: tuple) -> None:
+        Bot.mtx.lock()
+        user_data = Bot.db.getUserData(notice[1])
+        if 'notices' not in user_data.keys():
+            user_data['notices'] = []
+        user_data['notices'].append(notice[3])
+        Bot.notices.append(notice[3])
         Bot.db.Dump()
         Bot.mtx.unlock()
-        if ready_notices is None:
-            return None
-        return ready_notices[1], ready_notices[2]
 
     @staticmethod
     def startCommand(message):
@@ -194,16 +202,15 @@ class Bot:
 
         response = ''
         if 'notes' in user_data.keys():
-            response += ''.join([f'```{i + 1}: {note}\n```' for i, note in enumerate(user_data['notes'])])
+            response += ''.join([f'```{i + 1}: {note}```\n' for i, note in enumerate(user_data['notes'])])
 
         notes_count = 0 if 'notes' not in user_data.keys() else len(user_data['notes'])
         if 'notices' in user_data.keys():
             response += ''.join(
-                [f'```{i + notes_count + 1}-напоминание: {Bot.__prettyNotice(notice)}\n```' for i, notice in
+                [f'```{i + notes_count + 1}-напоминание: {Bot.__prettyNotice(notice)}```\n' for i, notice in
                  enumerate(user_data['notices'])])
-
-        if response == '':
             return "У вас пока нет никаких заметок"
+        print(response)
         return response
 
     @staticmethod
@@ -299,25 +306,25 @@ class Bot:
         * only for single commands or root commands that starts echo *
     '''
     commands = [
-        (startCommand.__func__, ['start']),
-        (helloCommand.__func__, ['hello']),
-        (gptCommand.__func__, ['gpt']),
-        (addNoteCommand.__func__, ['note', 'add']),
-        (getNoteCommand.__func__, ['get']),
-        (deleteNoteCommand.__func__, ['del', 'delete']),
-        (addReminderCommand.__func__, ['reminder', 'notice']),
-        (helpCommand.__func__, ['help'])
+        (startCommand.__get__(object), ['start']),
+        (helloCommand.__get__(object), ['hello']),
+        (gptCommand.__get__(object), ['gpt']),
+        (addNoteCommand.__get__(object), ['note', 'add']),
+        (getNoteCommand.__get__(object), ['get']),
+        (deleteNoteCommand.__get__(object), ['del', 'delete']),
+        (addReminderCommand.__get__(object), ['reminder', 'notice']),
+        (helpCommand.__get__(object), ['help'])
     ]
 
     commands_dict = {
-        'start': startCommand.__func__,
-        'hello': helloCommand.__func__,
-        'gpt': gptCommand.__func__,
-        'note': addNoteCommand.__func__,
-        'get': getNoteCommand.__func__,
-        'delete': deleteNoteCommand.__func__,
-        'notice': addReminderCommand.__func__,
-        'help': helpCommand.__func__,
+        'start': startCommand.__get__(object),
+        'hello': helloCommand.__get__(object),
+        'gpt': gptCommand.__get__(object),
+        'note': addNoteCommand.__get__(object),
+        'get': getNoteCommand.__get__(object),
+        'delete': deleteNoteCommand.__get__(object),
+        'notice': addReminderCommand.__get__(object),
+        'help': helpCommand.__get__(object),
     }
 
 
