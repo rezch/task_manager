@@ -301,31 +301,32 @@ class Bot:
         response = ''.join([line + '\n' for line in HELP_MESSAGE.split('\n')[1:]])
         return Response(response)
 
-    ''' list of bot commands 
-        ( command function, list of command start key word )
-        * only for single commands or root commands that starts echo *
-    '''
-    commands = [
-        (startCommand.__get__(object), ['start']),
-        (helloCommand.__get__(object), ['hello']),
-        (gptCommand.__get__(object), ['gpt']),
-        (addNoteCommand.__get__(object), ['note', 'add']),
-        (getNoteCommand.__get__(object), ['get']),
-        (deleteNoteCommand.__get__(object), ['del', 'delete']),
-        (addReminderCommand.__get__(object), ['reminder', 'notice']),
-        (helpCommand.__get__(object), ['help'])
-    ]
 
-    commands_dict = {
-        'start': startCommand.__get__(object),
-        'hello': helloCommand.__get__(object),
-        'gpt': gptCommand.__get__(object),
-        'note': addNoteCommand.__get__(object),
-        'get': getNoteCommand.__get__(object),
-        'delete': deleteNoteCommand.__get__(object),
-        'notice': addReminderCommand.__get__(object),
-        'help': helpCommand.__get__(object),
-    }
+''' list of bot commands 
+    ( command function, list of command start key word )
+    * only for single commands or root commands that starts echo *
+'''
+Bot.commands = [
+    (Bot.startCommand, ['start']),
+    (Bot.helloCommand, ['hello']),
+    (Bot.gptCommand, ['gpt']),
+    (Bot.addNoteCommand, ['note', 'add']),
+    (Bot.getNoteCommand, ['get']),
+    (Bot.deleteNoteCommand, ['del', 'delete']),
+    (Bot.addReminderCommand, ['reminder', 'notice']),
+    (Bot.helpCommand, ['help'])
+]
+
+Bot.commands_dict = {
+    'start': Bot.startCommand,
+    'hello': Bot.helloCommand,
+    'gpt': Bot.gptCommand,
+    'note': Bot.addNoteCommand,
+    'get': Bot.getNoteCommand,
+    'delete': Bot.deleteNoteCommand,
+    'notice': Bot.addReminderCommand,
+    'help': Bot.helpCommand,
+}
 
 
 if __name__ == "__main__":
