@@ -48,8 +48,10 @@ class Response:
     def prepare_message(message: str) -> str:
         # telebot reserved charachters for markdown mode - "()_-."
         reserved = '()_-.'
+        print(message)
         for char in reserved:
-            message = message.replace(char, '\\' + char)
+            message = message.replace(char, f'\{char}')
+        print(message)
         return message
 
     def __iter__(self):
@@ -207,7 +209,7 @@ class Bot:
         notes_count = 0 if 'notes' not in user_data.keys() else len(user_data['notes'])
         if 'notices' in user_data.keys():
             response += ''.join(
-                [f'```{i + notes_count + 1}-напоминание: {Bot.__prettyNotice(notice)}```\n' for i, notice in
+                [f'```{i + notes_count + 1}[напоминание]: {Bot.__prettyNotice(notice)}```\n' for i, notice in
                  enumerate(user_data['notices'])])
         if response == '':
             return "У вас пока нет никаких заметок"
