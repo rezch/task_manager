@@ -1,7 +1,7 @@
 from datetime import datetime
 from time import sleep
 
-from ChatGPT_Request import Request, RawGptRequest
+from gpt_request import Request, RawGptRequest
 from db import DB
 
 HELP_MESSAGE = '''Привет, я бот помощник, с моей помощью ты сможешь хранить свои заметки, и попросить меня напомнить тебе о чем-то.
@@ -47,7 +47,7 @@ class Response:
     @staticmethod
     def prepare_message(message: str) -> str:
         # telebot reserved charachters for markdown mode - "()_-."
-        reserved = '_*[]()~`>#+-=|{}.!'
+        reserved = '_*[]()~>#+-=|{}.!'
         print(message)
         for char in reserved:
             message = message.replace(char, f'\{char}')

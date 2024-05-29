@@ -6,7 +6,7 @@ from time import sleep
 
 from voice_parser import recognise
 from main import Bot
-from ChatGPT_Request import ChangeModel, ChangeTimeout, ChangeAttempts, GetGlobalVars
+from gpt_request import ChangeModel, ChangeTimeout, ChangeAttempts, GetGlobalVars
 
 
 token = environ.get("TOKEN")
