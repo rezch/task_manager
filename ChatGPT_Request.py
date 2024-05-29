@@ -89,11 +89,14 @@ def RawRequestEvent(appender: str) -> str:
         timeout=TIMEOUT,
     )
 
-    result = response.choices[0].message.content
-    result = Translator().translate(result, 'Russian').result
+    response = response.choices[0].message.content
 
-    print("Gpt response: ", result)
-    return result
+    translator = Translator()
+    if str(translator.language(response).result) == 'zho':
+        response = translator.translate(response, 'Russian').result
+
+    print("Gpt response: ", response)
+    return response
 
 
 def RawGptRequest(appender: str) -> str:
