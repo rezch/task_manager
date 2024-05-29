@@ -209,6 +209,7 @@ class Bot:
             response += ''.join(
                 [f'```{i + notes_count + 1}-напоминание: {Bot.__prettyNotice(notice)}```\n' for i, notice in
                  enumerate(user_data['notices'])])
+        if response == '':
             return "У вас пока нет никаких заметок"
         print(response)
         return response
