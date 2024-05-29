@@ -65,7 +65,7 @@ class Mtx:
 
     def lock(self):
         while self.__lock == True:
-            sleep(0.1)
+            sleep(0)  # thread yield
         self.__lock = True
 
     def unlock(self):
