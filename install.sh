@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-BASEDIR=$(dirname "$0")
-
 # install python3 if it needed
 if ! type python3.10; then
     echo "installing python3.10"
