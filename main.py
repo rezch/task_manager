@@ -47,11 +47,12 @@ class Response:
     @staticmethod
     def prepare_message(message: str) -> str:
         # telebot reserved charachters for markdown mode - "()_-."
-        reserved = '_*[]()~>#+-=|{}.!'
-        print(message)
+        reserved = '_*~>#+-=|{}.!'
         for char in reserved:
             message = message.replace(char, f'\{char}')
-        print(message)
+        if '[]' in message:
+            message = message.replace('[]', '\[\]')
+        print(f'response: {message}')
         return message
 
     def __iter__(self):
@@ -153,7 +154,6 @@ class Bot:
         """ start command """
         global HELP_MESSAGE
         return Response(HELP_MESSAGE)
-
 
     @staticmethod
     def helloCommand(message):
