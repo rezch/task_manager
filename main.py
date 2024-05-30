@@ -46,8 +46,8 @@ class Response:
 
     @staticmethod
     def prepare_message(message: str) -> str:
-        # telebot reserved charachters for markdown mode - "()_-."
-        reserved = '_*~>#+-=|{}.!'
+        # telebot reserved charachters for markdown mode
+        reserved = '_*~>#+-=|{}.!()'
         for char in reserved:
             message = message.replace(char, f'\{char}')
         if '[]' in message:
