@@ -5,7 +5,7 @@ import threading
 from time import sleep
 
 from voice_parser import recognise
-from main import Bot, commands, commands_dict
+from main import Bot
 from gpt_request import ChangeModel, ChangeTimeout, ChangeAttempts, GetGlobalVars
 
 
@@ -76,8 +76,8 @@ buttons = [
 def callback_inline(call):
     print(f'call `{call.data}`, from user {call.from_user.id}-{call.from_user.username}')
     try:
-        if call.data in commands_dict.keys():
-            response = commands_dict[call.data](call.message)
+        if call.data in Bot.commands_dict.keys():
+            response = Bot.commands_dict[call.data](call.message)
             keyboard = telebot.types.InlineKeyboardMarkup().add(*buttons) if response.keyboard is True else None
             echo = client.edit_message_text(
                 chat_id=call.message.chat.id,
@@ -137,7 +137,7 @@ def base_wrapper(func):
 def wrap_commands():
     """ wraps all bot commands to telebot handlers """
 
-    for command in commands:
+    for command in Bot.commands:
         client.message_handler(commands=command[1])(base_wrapper(command[0]))
 
 

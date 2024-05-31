@@ -82,6 +82,8 @@ class Bot:
     """
 
     __instance = None
+    commands = []
+    commands_dict = {}
     forward = UserResponse()
     db = DB("data.json")
     notices = None  # format: (datetime, char.id, data, notice)
