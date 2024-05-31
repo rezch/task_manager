@@ -104,9 +104,11 @@ def RawGptRequest(appender: str) -> str:
     for _ in range(ATTEMPTS):
         try:
             response = RawRequestEvent(appender)
+            if response == 'Текущая область была использована в тот день, попробуйте изменить сетевую среду':
+                raise ValueError
             return response
         except Exception as e:
-            print(f"Gpt error: {e}",)
+            print(f'Gpt error: {e}')
     return 'Извините, сервис gpt4 временно не доступен'
 
 
