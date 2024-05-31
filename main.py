@@ -304,6 +304,24 @@ class Bot:
         response = ''.join([line + '\n' for line in HELP_MESSAGE.split('\n')[1:]])
         return Response(response)
 
+    @staticmethod
+    def addFewNotes(message):
+        return Response("Какие заметки вы хотите добавить?", Bot.addFewNotesEcho, keyboard=False)
+
+    @staticmethod
+    def addFewNotesEcho(message):
+        Bot.mtx.lock()
+        user_data = Bot.db.getUserData(message.chat.id)
+        if 'notes' not in user_data.keys():
+            user_data['notes'] = []
+
+        notes = message.text.split('\n')
+        user_data['notes'].extend(notes)
+
+        Bot.db.Dump()
+        Bot.mtx.unlock()
+        return Response("Заметка успешно добавлена", reply=message)
+
 
 ''' list of bot commands 
     ( command function, list of command start key word )
@@ -317,7 +335,8 @@ Bot.commands = [
     (Bot.getNoteCommand, ['get']),
     (Bot.deleteNoteCommand, ['del', 'delete']),
     (Bot.addReminderCommand, ['reminder', 'notice']),
-    (Bot.helpCommand, ['help'])
+    (Bot.helpCommand, ['help']),
+    (Bot.addFewNotes, ['notes']),
 ]
 
 Bot.commands_dict = {
@@ -329,6 +348,7 @@ Bot.commands_dict = {
     'delete': Bot.deleteNoteCommand,
     'notice': Bot.addReminderCommand,
     'help': Bot.helpCommand,
+    'notes': Bot.addFewNotes,
 }
 
 
