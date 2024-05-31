@@ -107,18 +107,18 @@ def base_wrapper(func):
         print(f'get command: `{args[0].text}`, from user {args[0].from_user.id}-{args[0].from_user.username}')
         response = func(args[0])  # -> ( response message, echo_func(opt) )
 
-        if response.reply is not None:
+        if response.reply == True:
             keyboard = telebot.types.InlineKeyboardMarkup().add(*buttons) if response.keyboard is True else None
-            echo = client.reply_to(
-                message=response.reply,
+            echo = client.send_message(
+                chat_id=args[0].chat.id,
                 text=str(response),
                 parse_mode="MarkdownV2",
                 reply_markup=keyboard
             )
         else:
             keyboard = telebot.types.InlineKeyboardMarkup().add(*buttons) if response.keyboard is True else None
-            echo = client.send_message(
-                chat_id=args[0].chat.id,
+            echo = client.reply_to(
+                message=response.reply,
                 text=str(response),
                 parse_mode="MarkdownV2",
                 reply_markup=keyboard

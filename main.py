@@ -173,7 +173,7 @@ class Bot:
 
     @staticmethod
     def gptEchoCommand(message):
-        return Response(RawGptRequest(message.text), reply=message)
+        return Response(RawGptRequest(message.text), reply=message, keyboard=False)
 
     @staticmethod
     def gptCommand(message):
