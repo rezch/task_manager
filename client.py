@@ -107,7 +107,7 @@ def base_wrapper(func):
         print(f'get command: `{args[0].text}`, from user {args[0].from_user.id}-{args[0].from_user.username}')
         response = func(args[0])  # -> ( response message, echo_func(opt) )
 
-        if response.reply == True:
+        if response.reply is None:
             keyboard = telebot.types.InlineKeyboardMarkup().add(*buttons) if response.keyboard is True else None
             echo = client.send_message(
                 chat_id=args[0].chat.id,
