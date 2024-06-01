@@ -18,7 +18,7 @@ client = telebot.TeleBot(token=token,
 
 
 def getTextFromVoice(message):
-    # getting data from voice message file
+    """ getting data from voice message file """
     voice_file_path = "./voice/"
     ready_voice_file_path = "./ready/"
 
@@ -66,34 +66,32 @@ buttons = [
     telebot.types.InlineKeyboardButton(text='get', callback_data='get'),
     telebot.types.InlineKeyboardButton(text='help', callback_data='help'),
 ]
-# buttons_yes_no = [
-#     telebot.types.InlineKeyboardButton(text='Да', callback_data='yes'),
-#     telebot.types.InlineKeyboardButton(text='Нет', callback_data='no'),
-# ]
 
 
 @client.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
+    """ handling keyboard callbacks """
     print(f'call `{call.data}`, from user {call.from_user.id}-{call.from_user.username}')
     try:
-        if call.data in Bot.commands_dict.keys():
-            response = Bot.commands_dict[call.data](call.message)
-            keyboard = telebot.types.InlineKeyboardMarkup().add(*buttons) if response.keyboard is True else None
-            echo = client.edit_message_text(
-                chat_id=call.message.chat.id,
-                message_id=call.message.message_id,
-                text=str(response),
-                parse_mode="MarkdownV2",
-                reply_markup=keyboard
-            )
+        if call.data not in Bot.commands_dict.keys():
+            return
+        response = Bot.commands_dict[call.data](call.message)
+        keyboard = telebot.types.InlineKeyboardMarkup().add(*buttons) if response.keyboard is True else None
+        echo = client.edit_message_text(
+        chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            text=str(response),
+            parse_mode="MarkdownV2",
+            reply_markup=keyboard
+        )
 
-            # if command had 'echo' function
-            if response.echo is not None:
-                client.register_next_step_handler(
-                    message=echo,
-                    callback=base_wrapper(response.echo),
-                    parse_mode="MarkdownV2",
-                )
+        # if command had 'echo' function
+        if response.echo is not None:
+            client.register_next_step_handler(
+                message=echo,
+                callback=base_wrapper(response.echo),
+                parse_mode="MarkdownV2",
+             )
     except telebot.apihelper.ApiTelegramException:
         pass
 
@@ -107,8 +105,8 @@ def base_wrapper(func):
         print(f'get command: `{args[0].text}`, from user {args[0].from_user.id}-{args[0].from_user.username}')
         response = func(args[0])  # -> ( response message, echo_func(opt) )
 
+        keyboard = telebot.types.InlineKeyboardMarkup().add(*buttons) if response.keyboard is True else None
         if response.reply is None:
-            keyboard = telebot.types.InlineKeyboardMarkup().add(*buttons) if response.keyboard is True else None
             echo = client.send_message(
                 chat_id=args[0].chat.id,
                 text=str(response),
@@ -116,7 +114,6 @@ def base_wrapper(func):
                 reply_markup=keyboard
             )
         else:
-            keyboard = telebot.types.InlineKeyboardMarkup().add(*buttons) if response.keyboard is True else None
             echo = client.reply_to(
                 message=response.reply,
                 text=str(response),
@@ -136,7 +133,6 @@ def base_wrapper(func):
 
 def wrap_commands():
     """ wraps all bot commands to telebot handlers """
-
     for command in Bot.commands:
         client.message_handler(commands=command[1])(base_wrapper(command[0]))
 
@@ -171,9 +167,9 @@ def commandline_polling():
             opt = input()
             if opt == 'quit':
                 print('> Stopping the bot')
+                alive = False
                 client.stop_polling()
                 Bot.db.Dump()
-                alive = False
                 return
             elif opt == 'data':
                 data = Bot.GetData()
@@ -200,6 +196,15 @@ def commandline_polling():
             print(e)
 
 
+def join_threads():
+    global threads
+    if threads != []:
+        print("> Joining the threads")
+    for thread in threads:
+        thread.join()
+    threads = []
+
+
 def start_polling():
     """ bot start infinity polling """
     global alive, threads
@@ -210,7 +215,7 @@ def start_polling():
 
     wrap_commands()
     alive = True
-    threads = []
+    join_threads()
 
     threads.extend([threading.Thread(target=notices_polling), threading.Thread(target=commandline_polling)])
 
@@ -219,16 +224,10 @@ def start_polling():
 
     print("> Start polling")
     client.infinity_polling()
-
-    print("> Joining the threads")
-    for thread in threads:
-        thread.join()
-    print("> terminated")
+    join_threads()
+    print("> Terminated")
 
 
 if __name__ == "__main__":
-    restart = True
-    while restart:
-        restart = False
-        start_polling()
+    start_polling()
 
