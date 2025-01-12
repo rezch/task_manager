@@ -9,13 +9,8 @@ from main import Bot
 from gpt_request import ChangeModel, ChangeTimeout, ChangeAttempts, GetGlobalVars
 
 
-token = environ.get("TOKEN")
-client = telebot.TeleBot(token=token,
-                         parse_mode=None,
-                         threaded=True,
-                         num_threads=cpu_count()
-                         )
-
+token = None
+client = None
 
 def getTextFromVoice(message):
     """ getting data from voice message file """
@@ -207,11 +202,19 @@ def join_threads():
 
 def start_polling():
     """ bot start infinity polling """
-    global alive, threads
+    global token, client, alive, threads
 
-    if environ.get("TOKEN") is None:
-        print("> Error: bot token is not defined")
+    token = environ.get("TOKEN")
+
+    if token is None:
+        print("> Error: bot token is not defined, please set env var 'TOKEN'.")
         return
+
+    client = telebot.TeleBot(token=token,
+                             parse_mode=None,
+                             threaded=True,
+                             num_threads=cpu_count()
+                             )
 
     wrap_commands()
     alive = True
