@@ -1,0 +1,8 @@
+*.json
+
+voice
+ready
+
+tmbotenv
+.idea
+__pycache__

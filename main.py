@@ -1,7 +1,8 @@
 from datetime import datetime
 from time import sleep
 
-from gpt_request import Request, RawGptRequest
+from utils.gpt_request import Request, RawGptRequest
+from utils.logger import log
 from db import DB
 
 HELP_MESSAGE = '''Привет, я бот помощник, с моей помощью ты сможешь хранить свои заметки, и попросить меня напомнить тебе о чем-то.
@@ -34,7 +35,7 @@ class UserResponse:
             self.__data[user_id] = {}
 
         self.__data[user_id][command] = data
-        print(f'dump to {user_id}-{command}: {data}')
+        log(f'dump to {user_id}-{command}: {data}')
 
 
 class Response:
@@ -52,7 +53,7 @@ class Response:
             message = message.replace(char, f'\{char}')
         if '[]' in message:
             message = message.replace('[]', '\[\]')
-        print(f'response: {message}')
+        log(f'response: {message}')
         return message
 
     def __iter__(self):
@@ -215,7 +216,7 @@ class Bot:
                  enumerate(user_data['notices'])])
         if response == '':
             return "У вас пока нет никаких заметок"
-        print(response)
+        log(response)
         return response
 
     @staticmethod

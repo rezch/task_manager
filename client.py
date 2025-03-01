@@ -4,13 +4,15 @@ from uuid import uuid4
 import threading
 from time import sleep
 
-from voice_parser import recognise
+from utils.voice_parser import recognise
+from utils.gpt_request import ChangeModel, ChangeTimeout, ChangeAttempts, GetGlobalVars
+from utils.logger import log
 from main import Bot
-from gpt_request import ChangeModel, ChangeTimeout, ChangeAttempts, GetGlobalVars
 
 
 token = None
 client = None
+
 
 def getTextFromVoice(message):
     """ getting data from voice message file """
@@ -66,7 +68,7 @@ buttons = [
 @client.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
     """ handling keyboard callbacks """
-    print(f'call `{call.data}`, from user {call.from_user.id}-{call.from_user.username}')
+    log(f'call `{call.data}`, from user {call.from_user.id}-{call.from_user.username}')
     try:
         if call.data not in Bot.commands_dict.keys():
             return
@@ -97,7 +99,7 @@ def base_wrapper(func):
         if args[0].voice is not None: # if message type is voice
             args[0].text = getTextFromVoice(args[0])
 
-        print(f'get command: `{args[0].text}`, from user {args[0].from_user.id}-{args[0].from_user.username}')
+        log(f'get command: `{args[0].text}`, from user {args[0].from_user.id}-{args[0].from_user.username}')
         response = func(args[0])  # -> ( response message, echo_func(opt) )
 
         keyboard = telebot.types.InlineKeyboardMarkup().add(*buttons) if response.keyboard is True else None
@@ -145,13 +147,13 @@ def notices_polling():
             ready_notice = Bot.noticesPolling()
             if ready_notice is None:
                 continue
-            print("Send notice:", ready_notice)
+            log("Send notice:", ready_notice)
             client.send_message(
                 chat_id=ready_notice[1],
                 text=str(ready_notice[2])
             )
         except Exception as e:
-            print(e, f'Cannot send notice: {ready_notice}')
+            log(e, f'Cannot send notice: {ready_notice}')
             Bot.revertNotice(ready_notice)
 
 
@@ -161,40 +163,40 @@ def commandline_polling():
         try:
             opt = input()
             if opt == 'quit':
-                print('> Stopping the bot')
+                log('> Stopping the bot')
                 alive = False
                 client.stop_polling()
                 Bot.db.Dump()
                 return
             elif opt == 'data':
                 data = Bot.GetData()
-                print(f'> {data}')
+                log(f'> {data}')
             elif opt[:8] == 'setmodel':
                 if ChangeModel(opt[9:]):
-                    print(f'> Now using gpt model: {opt[9:]}')
+                    log(f'> Now using gpt model: {opt[9:]}')
                 else:
-                    print('> Invalid model name, available models: "gpt-3.5t", "gpt-4"')
+                    log('> Invalid model name, available models: "gpt-3.5t", "gpt-4"')
             elif opt[:10] == 'settimeout':
                 if ChangeTimeout(opt[11:]):
-                    print(f'> Now gpt request timeout: {opt[11:]}')
+                    log(f'> Now gpt request timeout: {opt[11:]}')
                 else:
-                    print('> Invalid timeout value, available timeout range: 5 - 300 sec')
+                    log('> Invalid timeout value, available timeout range: 5 - 300 sec')
             elif opt[:11] == 'setattempts':
                 if ChangeAttempts(opt[12:]):
-                    print(f'> Now gpt request attempts count: {opt[12:]}')
+                    log(f'> Now gpt request attempts count: {opt[12:]}')
                 else:
-                    print(f'Invalid attempts count, available num: 1 - 10')
+                    log(f'Invalid attempts count, available num: 1 - 10')
             elif opt == 'getvars':
                 data = GetGlobalVars()
-                print("".join([f'> {key}: {value}\n' for key, value in data.items()]))
+                log("".join([f'> {key}: {value}\n' for key, value in data.items()]))
         except Exception as e:
-            print(e)
+            log(e)
 
 
 def join_threads():
     global threads
     if threads != []:
-        print("> Joining the threads")
+        log("> Joining the threads")
     for thread in threads:
         thread.join()
     threads = []
@@ -207,7 +209,7 @@ def start_polling():
     token = environ.get("TOKEN")
 
     if token is None:
-        print("> Error: bot token is not defined, please set env var 'TOKEN'.")
+        log("> Error: bot token is not defined, please set env var 'TOKEN'.")
         return
 
     client = telebot.TeleBot(token=token,
@@ -225,10 +227,10 @@ def start_polling():
     for thread in threads:
         thread.start()
 
-    print("> Start polling")
+    log("> Start polling")
     client.infinity_polling()
     join_threads()
-    print("> Terminated")
+    log("> Terminated")
 
 
 if __name__ == "__main__":
