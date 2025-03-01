@@ -10,8 +10,15 @@ from utils.logger import log
 from main import Bot
 
 
-token = None
-client = None
+token = environ.get("TOKEN")
+if token is None:
+    log("> Error: bot token is not defined, please set env var 'TOKEN'.")
+
+client = telebot.TeleBot(token=token,
+                         parse_mode=None,
+                         threaded=True,
+                         num_threads=cpu_count()
+                         )
 
 
 def getTextFromVoice(message):
@@ -205,18 +212,6 @@ def join_threads():
 def start_polling():
     """ bot start infinity polling """
     global token, client, alive, threads
-
-    token = environ.get("TOKEN")
-
-    if token is None:
-        log("> Error: bot token is not defined, please set env var 'TOKEN'.")
-        return
-
-    client = telebot.TeleBot(token=token,
-                             parse_mode=None,
-                             threaded=True,
-                             num_threads=cpu_count()
-                             )
 
     wrap_commands()
     alive = True
