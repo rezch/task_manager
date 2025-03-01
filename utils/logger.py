@@ -8,7 +8,7 @@ LOCK = Lock()
 
 def log(message, file=None, printable=True):
     time = datetime.now().strftime('%d.%m.%Y %H:%M')
-    log_msg = f'{time} : {message}'
+    log_msg = f'{time} : {message}\n'
 
     if printable:
         print(log_msg)
